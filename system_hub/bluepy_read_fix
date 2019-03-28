@@ -11,9 +11,9 @@ open btle.py file and find:
 
 and change for:
 
-    def readCharacteristic(self, handle, wantType='rd'):
+    def readCharacteristic(self, handle, wantType=None):
         self._writeCmd("rd %X\n" % handle)
-        resp = self._getResp(wantType)
+        resp = self._getResp(['rd']+[wantType])
         return resp['d'][0]
 
 now instead of .readCharacteristic(your_handle)
