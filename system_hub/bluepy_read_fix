@@ -1,0 +1,31 @@
+For the .readCharacteristics() to work properly
+you have to modify your bluepy btle.py file
+
+for me it was in ~/.local/python3.6/site-packages/bluepy
+open btle.py file and find:
+
+    def readCharacteristic(self, handle):
+        self._writeCmd("rd %X\n" % handle)
+        resp = self._getResp('rd')
+        return resp['d'][0]
+
+and change for:
+
+    def readCharacteristic(self, handle, wantType='rd'):
+        self._writeCmd("rd %X\n" % handle)
+        resp = self._getResp(wantType)
+        return resp['d'][0]
+
+now instead of .readCharacteristic(your_handle)
+just call .readCharacteristic(your_handle, wantType='ntfy')
+
+What we think is happening is that this Chinese chip is sending data
+in 'ntfy' (notify) package instead or 'rd' package. (Notify package is probably
+supposed to come first and carry no data)
+Some libraries or platforms may not care about this but
+bluepy is only displaying data that comes from packages with 'rd' (read) type
+and as this 'rd' package is 'data' content is undefined or empty, the incorrect
+value is displayed.
+
+by passing 'ntfy' as a parameter you are saying to return data from this package type
+
