@@ -7,8 +7,6 @@
 int initialValue;
 const int delta = 10; //allowed fluctuation from initial meassurement
 
-volatile bool ALARM = 0;
-
 long getDistance(){
     digitalWrite(TRIG_PIN, LOW); 
     delayMicroseconds(2); 
@@ -19,6 +17,12 @@ long getDistance(){
     long duration = pulseIn(ECHO_PIN, HIGH);
     
     return (duration/2) / 29.1;
+}
+
+void set_initial_value(){
+    initialValue = getDistance();
+    Serial.print("Initial value = ");
+    Serial.println(initialValue);
 }
 
 void ultrasonic_setup() {
@@ -38,28 +42,21 @@ void ultrasonic_setup() {
         delay(100);
     }
     
-    
-    initialValue = getDistance();
-    Serial.print("Initial value = ");
-    Serial.println(initialValue);
+    set_initial_value();
     digitalWrite(LED,LOW);
 }
     
-void ultrasonic_loop() {
+bool check_alarm() {
     long distance = getDistance();
     
     Serial.print(distance);
     Serial.println(" cm");
     
     if (distance < initialValue - delta || distance > initialValue + delta){
-        ALARM = 1;
+        ring();
+        return 1;
         
     }
-    delay(250);
-    
-    while (ALARM){
-        Serial.println("ALARM");
-        ring();
-        ALARM = 0;
-    }
+
+    return 0;
 }

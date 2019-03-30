@@ -1,0 +1,17 @@
+#define BUZZER 8
+#define TIME_DELAY 150
+#define LED 13
+
+void ringer_setup(){
+    pinMode(BUZZER, OUTPUT);
+}
+
+void ring(){
+    digitalWrite(BUZZER, HIGH);
+    digitalWrite(LED, HIGH);
+    delay(TIME_DELAY);
+    
+    digitalWrite(BUZZER, LOW);
+    digitalWrite(LED, LOW);
+    delay(TIME_DELAY);
+}
