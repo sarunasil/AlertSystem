@@ -2,7 +2,7 @@
 
 #define ARDUINO_RX 3
 #define ARDUINO_TX 4
-#define STATE_PIN 6
+#define STATE_PIN 7
 
 SoftwareSerial BTSerial(ARDUINO_RX, ARDUINO_TX); //RX|TX
 
