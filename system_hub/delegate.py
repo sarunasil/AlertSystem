@@ -1,15 +1,19 @@
-import struct
+#!/usr/bin/python3
 
-from bluepy import btle
+from bluepy.btle import DefaultDelegate
 
+class SensorDelegate(DefaultDelegate):
 
-class MyDelegate(btle.DefaultDelegate):
-    def __init__(self, params):
-        btle.DefaultDelegate.__init__(self)
-        # ... initialise here
-        pass
+    def __init__(self, device, alarm_func):
+        super().__init__()
 
-    def handleNotification(self, cHandle, data):
-        # ... perhaps check cHandle
-        # ... process 'data'
-        print ( str(data))
+        self.device = device
+        self.alarm_func = alarm_func
+
+    def handleNotification(self,cHandle,data):
+
+        try:
+            print(data)
+            alarm_func(device.name, data)
+        except:
+            pass

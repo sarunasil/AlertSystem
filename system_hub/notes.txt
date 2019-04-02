@@ -1,0 +1,20 @@
+<POWER ON>
+get sensor and ringer mac list from sqlite
+
+if current_connected ringers and current_connected sensors < ringers and sensors from sqlite:
+    if there is a disconnected device - remove it and print a message about it
+    scan all available devices
+        create list of ringer and sensors available now
+    try to connect to available ringers and sensors if not in connected devices lis already
+        if connnected - ok
+        if failed - pass
+
+    wait 15 sec?
+
+Delegates deal with incomming messages - if sensor sent "ALARM"
+    call function to write to sqlite and another function to send out message to all ringers WITH this sensor name
+
+- every 1min check sqlite for changes in sensor an ringer list
+
+established a connection to webapp for sending and receiving messages
+
