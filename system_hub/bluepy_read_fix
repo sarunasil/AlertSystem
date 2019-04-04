@@ -1,7 +1,7 @@
 For the .readCharacteristics() to work properly
 you have to modify your bluepy btle.py file
 
-for me it was in ~/.local/python3.6/site-packages/bluepy
+for me it was in ~/.local/lib/python3.6/site-packages/bluepy
 open btle.py file and find:
 
     def readCharacteristic(self, handle):
@@ -29,3 +29,9 @@ value is displayed.
 
 by passing 'ntfy' as a parameter you are saying to return data from this package type
 
+
+
+--- Had to make another modification ---
+to make getState to work
+check getState()
+and self.status()

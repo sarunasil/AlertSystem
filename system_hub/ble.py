@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from bluepy import btle
 
-from delegate import SensorDelegate
+from delegate import SensorDelegate, RingerDelegate
 from device import Device
 
 CHARACTERISTIC = 37 #ble module in use characteristic for data
@@ -22,9 +22,12 @@ def find_system_devices(sensors, ringers, sensor_obj, ringer_obj):
     sensor_macs = {}
     ringer_macs = {}
 
-
-    scanner = btle.Scanner()
-    devices = scanner.scan(10.0)
+    devices = []
+    try:
+        scanner = btle.Scanner()
+        devices = scanner.scan(15.0)
+    except Exception as e:
+        print ("Scanner crashed... Just ignore. Error:" + str(e))
 
     for dev in devices:
         print ("Device ",dev.addr," (",dev.addrType,"), RSSI=",dev.rssi," dB")
@@ -48,20 +51,28 @@ def check_alive(sensor_objs, ringer_objs, callback):
 
     for mac, sensor in list(sensor_objs.items()):
         try:
-            if sensor.getState() != 'conn':
-                sensor_objs.pop(mac, None)
-                callback(sensor.name, mac, 'sensor')
-        except:
-            sensor_objs.pop(mac, None)
+            state = sensor.getState()
+            print ('----->', mac, state)
+            if state != 'conn':
+                raise Exception("state != 'conn'")
+        except Exception as e:
+            print (str(e))
 
+            sensor_objs.pop(mac, None)
+            callback(sensor.name, mac, 0)
+    print ("-------------\n")
 
     for mac, ringer in list(ringer_objs.items()):
         try:
-            if ringer.getState() != 'conn':
-                ringer_objs.pop(mac, None)
-                callback(ringer.name, mac, 'ringer')
-        except:
-            ringer_objs.pop(mac, None)
+            state = sensor.getState()
+            print ('----->', mac, state)
+            if state != 'conn':
+                raise Exception("state != 'conn'")
+        except Exception as e:
+            print (str(e))
+
+            sensor_objs.pop(mac, None)
+            callback(ringer.name, mac, 1)
 
 
 def receive_sensor_msg(ringer_objs):
@@ -97,14 +108,35 @@ def create_sensor_objects(data, sensors_objs, ringer_objs):
     '''
 
     for mac, name in data.items():
+        # print ("Creating sensor with: ", mac, name)
         try:
-            device = Device(name, CHARACTERISTIC, mac)
-            device.withDelegate(SensorDelegate(name, receive_sensor_msg(ringer_objs)) )
+            s_delegate = SensorDelegate(name, receive_sensor_msg(ringer_objs))
+            device = Device(name, CHARACTERISTIC, mac, s_delegate)
+            device.withDelegate(s_delegate)
             sensors_objs[mac] = device
-        except:
-            pass
+        except Exception as e:
+            print (str(e))
+            return 1    #return error code, so rerun scan
+    return 0
 
 def create_ringer_objects(data, ringer_objs):
-    pass
+    '''Create ringer object
+
+    Args:
+        data (dict): mac:name
+        ringer_objs (dict): mac:ringer_device
+    '''
+
+    for mac, name in data.items():
+        print ("Creating ringer with: ", mac, name)
+        try:
+            r_delegate = RingerDelegate(name) 
+            device = Device(name, CHARACTERISTIC, mac, r_delegate)
+            device.withDelegate(r_delegate)
+            ringer_objs[mac] = device
+        except Exception as e:
+            print (str(e))
+            return 1    #return error code, so rerun scan
+    return 0
 
 

@@ -87,7 +87,12 @@ def setup_defaults(path):
         # Get a cursor object
         cursor = db.cursor()
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS device(id INTEGER PRIMARY KEY, mac TEXT, name TEXT, type INTEGER)''')
+            CREATE TABLE IF NOT EXISTS device(id INTEGER PRIMARY KEY, mac TEXT UNIQUE, name TEXT UNIQUE, type INTEGER)''')
+
+        # insert_sql = ''' INSERT INTO device(mac, name, type)
+        #       VALUES(?,?,?) '''
+        # cursor.execute(insert_sql, ('00:15:83:30:d4:22', 'KIRK_SENSOR_1', 0))
+        # cursor.execute(insert_sql, ('00:15:83:40:7c:3d', 'KIRK_RINGER_1', 1))
 
         db.commit()
     except sqlite3.Error as e:

@@ -29,6 +29,7 @@ void react_to_hub_response(String response){
 void setup() {
     setup_connection();
     ringer_setup();
+    Serial.println("Setup done");
 }
 
 void loop() {
