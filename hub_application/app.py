@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, abort
 import os
+import sys
 
 
 app = Flask(__name__)
@@ -78,13 +79,13 @@ def alerts_management():
     global pipefile
 
     if request.method == 'POST':
-
+        # read the body
         print("Sending to cloud")
         return jsonify({"msg": "Sent to cloud"})
 
     elif request.method == 'DELETE':
         print("Writing to pipe")
-        os.write(pipefile, b"STOP\n")
+        os.write(pipefile, b"RESET\n")
         return jsonify({"msg": "Sent to BLE handler"})
 
 

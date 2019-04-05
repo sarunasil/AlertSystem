@@ -8,6 +8,7 @@ import cloud
 import ble
 import consistency
 import handler
+import requests
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 DATABASE_PATH = os.path.join(CURRENT_DIR, "database/db.sqlite")  #path to local database
@@ -132,6 +133,9 @@ def setup():
 
     db_manager = consistency.setup_consistency(renew_data, DATABASE_PATH)
     handler.Communicator().start()
+
+    sensors = requests.get("http://localhost:8080/devices/sensors").json()
+    ringers = requests.get("http://localhost:8080/devices/ringers").json()
 
     while connect() != 0:
         continue

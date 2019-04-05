@@ -23,7 +23,7 @@ class Communicator(threading.Thread):
 
                 line = pipefile.readline()
 
-                if line == "STOP\n":
+                if line == "RESET\n":
 
                     print("STOPPING RINGERS")  # TODO implementation for stopping ringers
 
