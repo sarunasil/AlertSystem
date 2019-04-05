@@ -27,9 +27,17 @@ class Communicator(threading.Thread):
 
                     print("STOPPING RINGERS")  # TODO implementation for stopping ringers
 
-                elif line == "NOTIFY\n":
-                    print("PULLING LIST OF SENSORS AND RINGERS AND UPDATING CONNECTIONS")
+                elif line.startswith("NOTIFY"):
+                    # msg is in format "NOTIFY:{SENSORS or RINGERS}\n", e.g. "NOTIFY:SENSORS\n" or "NOTIFY:RINGERS\n"
+                    msg = line[:-1].split(":")[1]
+
+                    if msg == "SENSORS":
+                        print("PULLING LIST OF SENSORS")
+                        sensors = requests.get("http://localhost:8080/devices/sensors").json()
+                        print(sensors)
+                    elif msg == "RINGERS":
+                        print("PULLING LIST OF RINGERS")
+                        ringers = requests.get("http://localhost:8080/devices/ringers").json()
+                        print(ringers)
+
                     # TODO implementation - do something with the list of sensors and ringers
-                    sensors = requests.get("http://localhost:8080/devices/sensors").json()
-                    ringers = requests.get("http://localhost:8080/devices/ringers").json()
-                    print(sensors, ringers)

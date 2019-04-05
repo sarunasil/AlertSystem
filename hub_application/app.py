@@ -29,13 +29,19 @@ def sensors():
 
         data["sensors"][alias] = {"MAC": mac_addr, "alias": alias}
 
+        os.write(pipefile, b"NOTIFY:SENSORS\n")
+
         return jsonify(data["sensors"][alias])
 
     elif request.method == 'GET':
         return jsonify(data["sensors"])
 
     elif request.method == 'DELETE':
+
         data["sensors"] = {}
+
+        os.write(pipefile, b"NOTIFY:SENSORS\n")
+
         return jsonify(data["sensors"])
 
 
@@ -51,6 +57,8 @@ def ringers():
 
         data["ringers"][alias] = {"MAC": mac_addr, "alias": alias}
 
+        os.write(pipefile, b"NOTIFY:RINGERS\n")
+
         return jsonify(data["ringers"][alias])
 
     elif request.method == 'GET':
@@ -58,6 +66,9 @@ def ringers():
 
     elif request.method == 'DELETE':
         data["ringers"] = {}
+
+        os.write(pipefile, b"NOTIFY:RINGERS\n")
+
         return jsonify(data["ringers"])
 
 
