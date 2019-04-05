@@ -86,6 +86,6 @@ String ble_listen(){
 void ble_send_alarm(){
     if (current_state){
         Serial.println("Sending: ALARM");
-        BTSerial.print("ALARM");
+        BTSerial.print("ALARM\n");
     }
 }

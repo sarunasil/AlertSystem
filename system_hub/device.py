@@ -13,8 +13,9 @@ class Device(Peripheral):
 
     def send_message(self, msg):
         try:
-            super().writeCharacteristic(self.characteristic, msg)
-        except:
-            pass
+            input ("Sending message: "+msg)
+            super().writeCharacteristic(self.characteristic, msg.encode('utf-8'))
+        except Exception as e:
+            print (str(e))
             #could actually deal with the problem in some way - e.g. reporting it
 

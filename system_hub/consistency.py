@@ -66,7 +66,7 @@ class Manager (threading.Thread):
         self.work = True #run while True
 
     def run(self):
-        while self.run:
+        while self.work:
             sensors_data = get_sensors(self.path)
             ringers_data = get_ringers(self.path)
 

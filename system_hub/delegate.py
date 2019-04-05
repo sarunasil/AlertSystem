@@ -4,17 +4,17 @@ from bluepy.btle import DefaultDelegate
 
 class SensorDelegate(DefaultDelegate):
 
-    def __init__(self, device, alarm_func):
+    def __init__(self, device_name, alarm_func):
         super().__init__()
 
-        self.device = device
+        self.device_name = device_name
         self.alarm_func = alarm_func
 
     def handleNotification(self,cHandle,data):
 
         try:
             print(data)
-            self.alarm_func(self.device.name, data)
+            self.alarm_func(data)
         except Exception as e:
             print (str(e))
 

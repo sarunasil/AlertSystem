@@ -25,10 +25,9 @@ def find_system_devices(sensors, ringers, sensor_obj, ringer_obj):
     devices = []
     try:
         scanner = btle.Scanner()
-        devices = scanner.scan(15.0)
+        devices = scanner.scan(5.0)
     except Exception as e:
         print ("Scanner crashed... Just ignore. Error:" + str(e))
-
     for dev in devices:
         print ("Device ",dev.addr," (",dev.addrType,"), RSSI=",dev.rssi," dB")
 
@@ -49,6 +48,8 @@ def check_alive(sensor_objs, ringer_objs, callback):
         callback (func): call this function if not connected
     '''
 
+    print (len(sensor_objs), len(ringer_objs))
+    print ("------------")
     for mac, sensor in list(sensor_objs.items()):
         try:
             state = sensor.getState()
@@ -58,22 +59,24 @@ def check_alive(sensor_objs, ringer_objs, callback):
         except Exception as e:
             print (str(e))
 
+            sensor.disconnect()
             sensor_objs.pop(mac, None)
             callback(sensor.name, mac, 0)
     print ("-------------\n")
 
     for mac, ringer in list(ringer_objs.items()):
         try:
-            state = sensor.getState()
+            state = ringer.getState()
             print ('----->', mac, state)
-            if state != 'conn':
-                raise Exception("state != 'conn'")
+            if state == 'disc':
+                raise Exception("state == 'disc'")
         except Exception as e:
             print (str(e))
 
-            sensor_objs.pop(mac, None)
+            ringer.disconnect()
+            ringer_objs.pop(mac, None)
             callback(ringer.name, mac, 1)
-
+    print ("------------\n\n")
 
 def receive_sensor_msg(ringer_objs):
     '''Deal with received sensor msg
@@ -86,7 +89,7 @@ def receive_sensor_msg(ringer_objs):
     def deal_with_sensor_msg(msg):
         print ("PROCESSING SENSOR MSG\n")
 
-        if msg == "ALARM\n":
+        if msg == b"ALARM\n":
             print ("ALARM acknowledged")
 
             for _, ringer in ringer_objs.items():
@@ -108,7 +111,7 @@ def create_sensor_objects(data, sensors_objs, ringer_objs):
     '''
 
     for mac, name in data.items():
-        # print ("Creating sensor with: ", mac, name)
+        print ("Creating sensor with: ", mac, name)
         try:
             s_delegate = SensorDelegate(name, receive_sensor_msg(ringer_objs))
             device = Device(name, CHARACTERISTIC, mac, s_delegate)
