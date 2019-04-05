@@ -4,6 +4,7 @@
 
 void ringer_setup(){
     pinMode(BUZZER, OUTPUT);
+    Serial.println("Buzzer setup done.");
 }
 
 void ring(){

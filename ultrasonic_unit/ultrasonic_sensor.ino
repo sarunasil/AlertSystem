@@ -28,7 +28,6 @@ void set_initial_value(){
 void ultrasonic_setup() {
     Serial.begin(9600);      // open the serial port at 9600 bps
     
-    pinMode(BUZZER, OUTPUT);
     pinMode(LED, OUTPUT);
     pinMode(TRIG_PIN, OUTPUT);
     pinMode(ECHO_PIN, INPUT);
@@ -53,7 +52,7 @@ bool check_alarm() {
     Serial.println(" cm");
     
     if (distance < initialValue - delta || distance > initialValue + delta){
-        ring();
+//        ring();
         return 1;
         
     }

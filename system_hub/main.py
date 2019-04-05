@@ -2,6 +2,7 @@
 #!/usr/bin/python3
 import time
 import os
+import threading
 
 import cloud
 import ble
@@ -20,8 +21,8 @@ ringer_objs = {}    #object list mac:Device
 
 db_manager = None
 
-def reconnect():
-    '''If not all possible devices connected:
+def connect():
+    '''
         - scan for nearby ble devices
         - create objects if any macs are in sqlite lists
     '''
@@ -36,13 +37,56 @@ def reconnect():
 
 
     if len(discovered_sensors) + len(sensor_objs) != sensors_db:
-        ble.create_sensor_objects(discovered_sensors, sensor_objs, ringer_objs)
+        error = ble.create_sensor_objects(discovered_sensors, sensor_objs, ringer_objs)
+        if error == 1:
+            return 1
 
     if len(discovered_ringers) + len(ringer_objs) != ringers_db:
-        ble.create_ringer_objects(discovered_ringers, ringer_objs)
+        error = ble.create_ringer_objects(discovered_ringers, ringer_objs)
+        if error == 1:
+            return 1
 
     print ("Reconnect done.")
     print (str(sensor_objs)+" | "+str(ringer_objs))
+    return 0
+
+
+
+class Reconnecter(threading.Thread):
+    '''Threat that tries to continuously reconnect to lost device
+    '''
+
+    reconnect_period = 3 #seconds
+
+    def __init__(self, data, typee):
+        '''Init
+
+        Args:
+            data ({mac:name}): data of device
+            typee (0|1): 0 - sensor; 1 - ringer
+        '''
+        super().__init__()
+
+        self.data = data
+        self.typee = typee
+        self.work = True #run while True
+
+    def run(self):
+        global sensor_objs, ringer_objs
+        while True:
+            if self.typee == 0:
+                error = ble.create_sensor_objects(self.data, sensor_objs, ringer_objs)
+                if error == 0:
+                    break
+            elif self.typee == 1:
+                error = ble.create_ringer_objects(self.data, ringer_objs)
+                if error == 0:
+                    break
+            else:
+                break
+            time.sleep(Reconnecter.reconnect_period)
+
+        cloud.reconnected_device(self.data.keys()[0])
 
 def lost_connection(name, mac, type):
     '''Call if lost connection to some device
@@ -52,6 +96,10 @@ def lost_connection(name, mac, type):
         mac (String): device mac
         type (String): 'sensor' or 'ringer'
     '''
+
+    #start threat to try reconnecting
+    reconnecter = Reconnecter({mac, name}, 0)
+    reconnecter.start()
 
     print ("Lost connection to "+name)
 
@@ -83,15 +131,28 @@ def setup():
 
     db_manager = consistency.setup_consistency(renew_data, DATABASE_PATH)
 
+    while connect() != 0:
+        continue
+
 def main():
     global sensor_objs, ringer_objs
 
+
     while True:
-        reconnect()
+        #go through all sensors
+        #ringers don't send data, so don't bother
+        for _, sensor in sensor_objs.items():
+            try:
+                if sensor.waitForNotifications(1.0):
+                    continue
+            except:
+                # Allow ble.check_alive to deal with connections
+                # this code is only concerned by notifications
+                pass
+
+
         ble.check_alive(sensor_objs, ringer_objs, lost_connection)
-
-        time.sleep(5)
-
+        time.sleep(1)
 
 if __name__== "__main__":
     setup()
