@@ -7,7 +7,6 @@ import threading
 
 import ble
 import communicator
-import requests
 
 #btle Peripherals
 sensor_objs = {}    #object list mac:Device
@@ -140,8 +139,8 @@ def setup():
     time.sleep(5)
 
     #call these to initiate NOTIFY PIPE MSG
-    renew_data(0, requests.get("http://localhost:8080/devices/sensors").json())
-    renew_data(1, requests.get("http://localhost:8080/devices/ringers").json())
+    renew_data(0, communicator.Communicator.get_sensrs())
+    renew_data(1, communicator.Communicator.get_ringers())
 
 
 def main():

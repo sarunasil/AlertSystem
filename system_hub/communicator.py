@@ -51,24 +51,50 @@ class Communicator(threading.Thread):
 
                     if msg == "SENSORS":
                         print("PULLING LIST OF SENSORS")
-                        sensors = requests.get("http://localhost:8080/devices/sensors").json()
+                        sensors = self.get_sensrs()
                         self.update_devices_func(0, sensors) #0 - sensor; 1 - ringer
                     elif msg == "RINGERS":
                         print("PULLING LIST OF RINGERS")
-                        ringers = requests.get("http://localhost:8080/devices/ringers").json()
+                        ringers = self.get_ringers()
                         self.update_devices_func(1, ringers) #0 - sensor; 1 - ringer
 
     @staticmethod
+    def get_sensrs():
+        sensors = requests.get("http://localhost:8080/devices/sensors").json()
+        return sensors
+
+    @staticmethod
+    def get_ringers():
+        ringers = requests.get("http://localhost:8080/devices/ringers").json()
+        return ringers
+
+    @staticmethod
     def ring(alias):
-        print ("Sending ring")
+        print("Sending ring")
         pass
 
     @staticmethod
-    def lost_connection(typee, alias):
-        print ("Sending lost connection")
-        pass
+    def lost_connection_with_sensor(alias):
+        print("Sending lost connection with sensor")
+        requests.post("http://localhost:8080/devices/sensors/{0}".format(alias), json={"status": "disconnected"})
+
+    @staticmethod
+    def established_connection_with_sensor(alias):
+        print("Sending established connection with sensor")
+        requests.post("http://localhost:8080/devices/sensors/{0}".format(alias), json={"status": "connected"})
+
+    @staticmethod
+    def lost_connection_with_ringer(alias):
+        print("Sending lost connection with ringer")
+        requests.post("http://localhost:8080/devices/ringers/{0}".format(alias), json={"status": "disconnected"})
+
+    @staticmethod
+    def established_connection_with_ringer(alias):
+        print("Sending established connection with ringer")
+        requests.post("http://localhost:8080/devices/ringers/{0}".format(alias), json={"status": "connected"})
 
     @staticmethod
     def scan_result(data):
-        print ("Sending scan result")
+        # ignoring this for now
+        print("Sending scan result")
         pass
