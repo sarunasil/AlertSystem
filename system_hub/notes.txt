@@ -12,7 +12,7 @@ if current_connected ringers and current_connected sensors < ringers and sensors
     wait 15 sec?
 
 Delegates deal with incomming messages - if sensor sent "ALARM"
-    call function to write to sqlite and another function to send out message to all ringers WITH this sensor name
+    call function to write to sqlite and another function to send out message to all ringers WITH this sensor alias
 
 - every 1min check sqlite for changes in sensor an ringer list
 

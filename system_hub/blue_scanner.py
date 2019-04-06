@@ -1,21 +1,33 @@
-from bluepy.btle import Scanner, DefaultDelegate
+from bluepy.btle import Scanner
 
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
+def scan():
+    '''Scans for BLE devices and returns information about them
+    used essentially for the user to find belonging new 'devices' (sensor|ringer)
 
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            print ("Discovered device", dev.addr)
-        elif isNewData:
-            print ("Received new data from", dev.addr)
+    Returns:
+        dict: data in json format
+    '''
 
-scanner = Scanner().withDelegate(ScanDelegate())
-devices = scanner.scan(10.0)
+    data = {}
 
-for dev in devices:
-    print ("Device ",dev.addr," (",dev.addrType,"), RSSI=",dev.rssi," dB")
-    for (adtype, desc, value) in dev.getScanData():
-        print (desc, " = ", value)
+    devices = Scanner().scan(10.0)
+    for dev in devices:
+        dev_data = {}
+        dev_data['addr'] = dev.addr
+        dev_data['addrType'] = dev.addrType
+        dev_data['rssi'] = dev.rssi
+        print ("Device ",dev.addr," (",dev.addrType,"), RSSI=",dev.rssi," dB")
 
-    print ("--------------------------------------------------")
+        scan_data = {}
+        for (adtype, desc, value) in dev.getScanData():
+            scan_data[desc] = value
+            print (adtype," | ",desc, " = ", value)
+        dev_data['scan_data'] = scan_data
+
+        print ("--------------------------------------------------")
+        data[dev.addr] = dev_data
+
+    return data
+
+if __name__ == '__main__':
+    print (scan())

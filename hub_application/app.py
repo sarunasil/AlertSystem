@@ -28,7 +28,7 @@ def sensors():
         if alias in data["sensors"]:
             abort(409, "A sensor with that name was already registered.")
 
-        data["sensors"][alias] = {"MAC": mac_addr, "alias": alias}
+        data["sensors"][alias] = {"mac": mac_addr, "alias": alias}
 
         os.write(pipefile, b"NOTIFY:SENSORS\n")
 
@@ -56,7 +56,7 @@ def ringers():
         if alias in data["ringers"]:
             abort(409, "A ringer with that name was already registered.")
 
-        data["ringers"][alias] = {"MAC": mac_addr, "alias": alias}
+        data["ringers"][alias] = {"mac": mac_addr, "alias": alias}
 
         os.write(pipefile, b"NOTIFY:RINGERS\n")
 
@@ -94,10 +94,10 @@ def validate_post_body(body):
     if body is None:
         abort(400, "Expecting a JSON request body")
 
-    if body.keys() != {"MAC", "alias"}:
-        abort(400, "Expecting MAC address and alias in request body")
+    if body.keys() != {"mac", "alias"}:
+        abort(400, "Expecting mac address and alias in request body")
 
-    mac_addr = body.get("MAC")
+    mac_addr = body.get("mac")
     if type(mac_addr) != str:
         abort(400, "Mac address must be a string value.")
 

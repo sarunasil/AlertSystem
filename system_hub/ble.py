@@ -6,77 +6,34 @@ from device import Device
 
 CHARACTERISTIC = 37 #ble module in use characteristic for data
 
-def find_system_devices(sensors, ringers, sensor_obj, ringer_obj):
-    '''Find NEW devices that are registered in the system
-
-    Args:
-        sensors (dict): sensors_from_sqlite
-        ringers (dict): ringers_from_sqlite
-        sensor_obj (dict): dict of established sensor objects mac:name
-        ringer_obj (dict): dict of established ringer objects mac:name
+def scan():
+    '''Scans for BLE devices and returns information about them
+    used essentially for the user to find belonging new 'devices' (sensor|ringer)
 
     Returns:
-        dict(sensor_mac:name), dict(ringer_mac:name)
+        dict: data in json format
     '''
 
-    sensor_macs = {}
-    ringer_macs = {}
+    data = {}
 
-    devices = []
-    try:
-        scanner = btle.Scanner()
-        devices = scanner.scan(5.0)
-    except Exception as e:
-        print ("Scanner crashed... Just ignore. Error:" + str(e))
+    devices = btle.Scanner().scan(10.0)
     for dev in devices:
+        dev_data = {}
+        dev_data['addr'] = dev.addr
+        dev_data['addrType'] = dev.addrType
+        dev_data['rssi'] = dev.rssi
         print ("Device ",dev.addr," (",dev.addrType,"), RSSI=",dev.rssi," dB")
 
-        if dev.addr in sensors and dev.addr not in sensor_obj:
-            sensor_macs[dev.addr] = sensors[dev.addr]
-        elif dev.addr in ringers and dev.addr not in ringer_obj:
-            ringer_macs[dev.addr] = ringers[dev.addr]
+        scan_data = {}
+        for (adtype, desc, value) in dev.getScanData():
+            scan_data[desc] = value
+            print (adtype," | ",desc, " = ", value)
+        dev_data['scan_data'] = scan_data
 
-    return sensor_macs, ringer_macs
+        print ("--------------------------------------------------")
+        data[dev.addr] = dev_data
 
-def check_alive(sensor_objs, ringer_objs, callback):
-    '''Check if system device is alive - if not or not responding 
-    notify that device is lost and remove from connected devices dicts
-
-    Args:
-        sensor_objs (dict): mac:sensor_name
-        ringer_objs (dict): mac:ringer_name
-        callback (func): call this function if not connected
-    '''
-
-    print (len(sensor_objs), len(ringer_objs))
-    print ("------------")
-    for mac, sensor in list(sensor_objs.items()):
-        try:
-            state = sensor.getState()
-            print ('----->', mac, state)
-            if state != 'conn':
-                raise Exception("state != 'conn'")
-        except Exception as e:
-            print (str(e))
-
-            sensor.disconnect()
-            sensor_objs.pop(mac, None)
-            callback(sensor.name, mac, 0)
-    print ("-------------\n")
-
-    for mac, ringer in list(ringer_objs.items()):
-        try:
-            state = ringer.getState()
-            print ('----->', mac, state)
-            if state == 'disc':
-                raise Exception("state == 'disc'")
-        except Exception as e:
-            print (str(e))
-
-            ringer.disconnect()
-            ringer_objs.pop(mac, None)
-            callback(ringer.name, mac, 1)
-    print ("------------\n\n")
+    return data
 
 def receive_sensor_msg(ringer_objs):
     '''Deal with received sensor msg
@@ -92,29 +49,29 @@ def receive_sensor_msg(ringer_objs):
         if msg == b"ALARM\n":
             print ("ALARM acknowledged")
 
-            for _, ringer in ringer_objs.items():
+            for ringer in ringer_objs.values():
                 ringer.send_message("RING\n")
 
     return deal_with_sensor_msg
 
 def send_command(recipients, command):
-    for _, recipient in recipients:
+    for recipient in recipients.values():
         recipient.send_message(command)
 
 def create_sensor_objects(data, sensors_objs, ringer_objs):
     '''Create sensor objects
 
     Args:
-        data (dict): mac:name
+        data (dict): mac:alias
         sensors_objs (dict): mac:sensor_device
         ringer_objs (dict): mac:ringer_device
     '''
 
-    for mac, name in data.items():
-        print ("Creating sensor with: ", mac, name)
+    for mac, alias in data.items():
+        print ("Creating sensor with: ", mac, alias)
         try:
-            s_delegate = SensorDelegate(name, receive_sensor_msg(ringer_objs))
-            device = Device(name, CHARACTERISTIC, mac, s_delegate)
+            s_delegate = SensorDelegate(alias, receive_sensor_msg(ringer_objs))
+            device = Device(alias, CHARACTERISTIC, mac, s_delegate)
             device.withDelegate(s_delegate)
             sensors_objs[mac] = device
         except Exception as e:
@@ -126,15 +83,15 @@ def create_ringer_objects(data, ringer_objs):
     '''Create ringer object
 
     Args:
-        data (dict): mac:name
+        data (dict): mac:alias
         ringer_objs (dict): mac:ringer_device
     '''
 
-    for mac, name in data.items():
-        print ("Creating ringer with: ", mac, name)
+    for mac, alias in data.items():
+        print ("Creating ringer with: ", mac, alias)
         try:
-            r_delegate = RingerDelegate(name) 
-            device = Device(name, CHARACTERISTIC, mac, r_delegate)
+            r_delegate = RingerDelegate(alias) 
+            device = Device(alias, CHARACTERISTIC, mac, r_delegate)
             device.withDelegate(r_delegate)
             ringer_objs[mac] = device
         except Exception as e:

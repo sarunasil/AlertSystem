@@ -5,49 +5,13 @@ import os
 import threading
 
 
-import cloud
 import ble
-import consistency
-import handler
+import communicator
 import requests
-
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-DATABASE_PATH = os.path.join(CURRENT_DIR, "database/db.sqlite")  #path to local database
-
-#from database
-sensors_db = {}     #sqlite sensor list mac:name
-ringers_db = {}     #sqlite ringer list mac:name
 
 #btle Peripherals
 sensor_objs = {}    #object list mac:Device
 ringer_objs = {}    #object list mac:Device
-
-db_manager = None
-
-def connect():
-    '''
-        - scan for nearby ble devices
-        - create objects if any macs are in sqlite lists
-    '''
-
-    global sensors_db, ringers_db
-    global sensor_objs, ringer_objs
-
-    if len(sensors_db) == len(sensor_objs) and len(ringers_db) == len(ringer_objs):
-        return 0
-
-    discovered_sensors, discovered_ringers = ble.find_system_devices(sensors_db, ringers_db, sensor_objs, ringer_objs)
-
-
-    if len(discovered_sensors) + len(sensor_objs) != sensors_db:
-        ble.create_sensor_objects(discovered_sensors, sensor_objs, ringer_objs)
-
-    if len(discovered_ringers) + len(ringer_objs) != ringers_db:
-        ble.create_ringer_objects(discovered_ringers, ringer_objs)
-
-    print (str(sensor_objs)+" | "+str(ringer_objs))
-    return 1
-
 
 
 class Reconnecter(threading.Thread):
@@ -60,7 +24,7 @@ class Reconnecter(threading.Thread):
         '''Init
 
         Args:
-            data ({mac:name}): data of device
+            data ({mac:alias}): data of device
             typee (0|1): 0 - sensor; 1 - ringer
         '''
         super().__init__()
@@ -84,68 +48,114 @@ class Reconnecter(threading.Thread):
                 break
             time.sleep(Reconnecter.reconnect_period)
 
-        cloud.reconnected_device(list(self.data.keys())[0])
+        #send notification that device X is reconnected
+        print ("Connected: ", self.data)
 
-def lost_connection(name, mac, typee):
-    '''Call if lost connection to some device
+def connect(alias, mac, typee):
+    '''Call if if want to connect to a device via a new threat
 
     Args:
-        name (String): device alias
+        alias (String): device alias
         mac (String): device mac
         type (0|1): 0 = 'sensor' or 1 = 'ringer'
     '''
 
-    input("Lost connection to: "+name+ " " + mac )
     #start threat to try reconnecting
-    reconnecter = Reconnecter({mac : name}, typee)
+    reconnecter = Reconnecter({mac : alias}, typee)
     reconnecter.start()
 
-def reset_all():
-    global sensor_objs, ringer_objs
 
-    ble.send_command({**sensors_db, **ringer_objs}, "RESET\n")
-
-def take_new_measurement():
-    global sensor_objs
-
-    ble.send_command(sensor_objs, "RESET_AND_MEASURE\n")
-
-def renew_data(sensors, ringers):
-    '''Renew sensors_db and ringers_db info
+def check_alive(sensor_objs, ringer_objs):
+    '''Check if system device is alive - if not or not responding 
+    notify that device is lost and remove from connected devices dicts
 
     Args:
-        sensors (dict): mac:Device
+        sensor_objs (dict): mac:sensor_alias
+        ringer_objs (dict): mac:ringer_alias
+    '''
+    def check(typee, device_objs):
+        '''Check one device type
+        '''
+
+        for mac, device in list(device_objs.items()):
+            try:
+                state = device.getState()
+                if state != 'conn':
+                    raise Exception("state != 'conn'")
+            except Exception as e:
+                print (str(e))
+
+                try:
+                    device.disconnect()
+                except:
+                    pass
+                device_objs.pop(mac, None)
+                connect(device.alias, mac, typee) #0 for sensor; 1 for ringer
+
+    check(0, sensor_objs)
+    check(1, ringer_objs)
+
+def reset(measure=False):
+    global sensor_objs, ringer_objs
+
+    if measure:
+        ble.send_command(sensor_objs, "RESET_AND_MEASURE\n")
+        ble.send_command(ringer_objs, "RESET\n")
+    else:
+        ble.send_command({**sensor_objs, **ringer_objs}, "RESET\n")
+
+def renew_data(typee, devices):
+    '''Renew sensors_objs or ringers_objs info depending on typee
+
+    Args:
+        typee (0|1): 0 - sensor; 1 - ringer
         ringers (dict): mac:Device
     '''
-    global sensors_db, ringers_db
+    global sensor_objs, ringer_objs
 
-    sensors_db = sensors
-    ringers_db = ringers
+    if typee == 0:
+        old_devices = sensor_objs
+    elif typee == 1:
+        old_devices = ringer_objs
+    else:
+        old_devices = {}
+
+    for mac, device in list(old_devices.items()):
+        try:
+            device.disconnect()
+        except:
+            pass
+        old_devices.pop(mac, None)
+
+    print (devices)
+    for device_data in devices.values():
+        print (device_data)
+        #typee: 0 for sensor, 1 for ringer
+        connect(device_data['alias'], device_data['mac'], typee)
 
 
 def setup():
-    global sensors_db, ringers_db, db_manager
+    communicator.Communicator(reset, renew_data, ble.scan).start()
 
-    db_manager = consistency.setup_consistency(renew_data, DATABASE_PATH)
-    handler.Communicator().start()
+    time.sleep(5)
 
-    sensors = requests.get("http://localhost:8080/devices/sensors").json()
-    ringers = requests.get("http://localhost:8080/devices/ringers").json()
+    #call these to initiate NOTIFY PIPE MSG
+    renew_data(0, requests.get("http://localhost:8080/devices/sensors").json())
+    renew_data(1, requests.get("http://localhost:8080/devices/ringers").json())
 
-    time.sleep(2)
-    while connect() == 1:
-        continue
 
 def main():
     global sensor_objs, ringer_objs
 
-
+    #TODO IMPLEMENT A THREAT POOL and task queue
+    #unmonitored spawning of threats is bound to create problems
+    #https://stackoverflow.com/questions/19369724/the-right-way-to-limit-maximum-number-of-threads-running-at-once
+    counter = 1
     while True:
         #go through all sensors
         #ringers don't send data, so don't bother
         for _, sensor in sensor_objs.items():
             try:
-                print ("notif from: ",sensor.name)
                 if sensor.waitForNotifications(1.0):
                     continue
             except Exception as e:
@@ -153,8 +163,10 @@ def main():
                 # this code is only concerned by notifications
                 print (str(e))
 
-        ble.check_alive(sensor_objs, ringer_objs, lost_connection)
+        check_alive(sensor_objs, ringer_objs)
         time.sleep(1)
+        print (counter, end='\r')
+        counter+=1
 
 if __name__== "__main__":
     setup()

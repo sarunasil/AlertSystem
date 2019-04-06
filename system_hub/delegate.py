@@ -4,10 +4,10 @@ from bluepy.btle import DefaultDelegate
 
 class SensorDelegate(DefaultDelegate):
 
-    def __init__(self, device_name, alarm_func):
+    def __init__(self, device_alias, alarm_func):
         super().__init__()
 
-        self.device_name = device_name
+        self.device_alias = device_alias
         self.alarm_func = alarm_func
 
     def handleNotification(self,cHandle,data):
