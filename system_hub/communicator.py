@@ -70,8 +70,10 @@ class Communicator(threading.Thread):
 
     @staticmethod
     def ring(alias):
+        # the assumption is that alias will always be the alias of a sensor
         print("Sending ring")
-        pass
+        # if more data about the alarm needs to be sent to app just include it in the JSON
+        requests.post("http://localhost:8080/alarms", json={"alias": alias})
 
     @staticmethod
     def lost_connection_with_sensor(alias):

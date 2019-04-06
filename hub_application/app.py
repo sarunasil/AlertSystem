@@ -40,7 +40,7 @@ def ringers_instance(alias):
     return jsonify(handle_request_for_device_instance("ringers", alias))
 
 
-@app.route('/alarm', methods=['POST', 'DELETE'])
+@app.route('/alarms', methods=['POST', 'DELETE'])
 def alarms_management():
 
     global pipefile
