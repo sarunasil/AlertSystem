@@ -2,56 +2,46 @@
 #!/usr/bin/python3
 import time
 import os
-import threading
-
+from queue import Queue
+from concurrent.futures import ThreadPoolExecutor
 
 import ble
 import communicator
+from worker import Worker
 
 #btle Peripherals
 sensor_objs = {}    #object list mac:Device
 ringer_objs = {}    #object list mac:Device
 
 
-class Reconnecter(threading.Thread):
-    '''Threat that tries to continuously reconnect to lost device
+# seems to indicate that having multiple ble.Peripheral objects
+# and trying to connec to them at the same time
+# IS thread safe
+# https://github.com/IanHarvey/bluepy/issues/126
+#jobs like reconnecting or creating new devices
+jobs_queue = Queue()
+pause_life_check = False
+
+def queue_raise_alarm(alias):
+    '''Call to queue an ALARM job to job_queue
+
+    Args:
+        alias (String): sensor which raised the alarm alias
     '''
+    global jobs_queue
+    global pause_life_check
 
-    reconnect_period = 3 #seconds
+    pause_life_check = True
+    jobs_queue.put({'job':'alarm', 'alias':alias})
+    print ("QUEUED: alarm")
 
-    def __init__(self, data, typee):
-        '''Init
+def queue_connect(jobs_queue, alias, mac, typee):
+    '''Call if if want to connect to a device via a new thread
 
-        Args:
-            data ({mac:alias}): data of device
-            typee (0|1): 0 - sensor; 1 - ringer
-        '''
-        super().__init__()
-
-        self.data = data
-        self.typee = typee
-        self.work = True #run while True
-
-    def run(self):
-        global sensor_objs, ringer_objs
-        while self.work:
-            if self.typee == 0:
-                error = ble.create_sensor_objects(self.data, sensor_objs, ringer_objs)
-                if error == 0:
-                    break
-            elif self.typee == 1:
-                error = ble.create_ringer_objects(self.data, ringer_objs)
-                if error == 0:
-                    break
-            else:
-                break
-            time.sleep(Reconnecter.reconnect_period)
-
-        #send notification that device X is reconnected
-        print ("Connected: ", self.data)
-
-def connect(alias, mac, typee):
-    '''Call if if want to connect to a device via a new threat
+    UPDATE:
+    Adds item info into jobs_queue and a worker will
+    pick it up whan available - limits the number of threads
+    created
 
     Args:
         alias (String): device alias
@@ -59,18 +49,17 @@ def connect(alias, mac, typee):
         type (0|1): 0 = 'sensor' or 1 = 'ringer'
     '''
 
-    #start threat to try reconnecting
-    reconnecter = Reconnecter({mac : alias}, typee)
-    reconnecter.start()
+    jobs_queue.put({'job':'connect', 'mac':mac, 'alias':alias, 'typee':typee, 'alarm_func':queue_raise_alarm})
+    print ("QUEUED: connect")
 
 
-def check_alive(sensor_objs, ringer_objs):
+
+def check_alive(jobs_queue, sensor_objs, ringer_objs):
     '''Check if system device is alive - if not or not responding 
     notify that device is lost and remove from connected devices dicts
 
     Args:
-        sensor_objs (dict): mac:sensor_alias
-        ringer_objs (dict): mac:ringer_alias
+        queue_connect_func (func): func ref to queue new connect request
     '''
     def check(typee, device_objs):
         '''Check one device type
@@ -84,24 +73,36 @@ def check_alive(sensor_objs, ringer_objs):
             except Exception as e:
                 print (str(e))
 
+                if typee == 0:
+                    communicator.Communicator.lost_connection_with_sensor(device.alias)
+                elif typee == 1:
+                    communicator.Communicator.lost_connection_with_ringer(device.alias)
+
+
                 try:
                     device.disconnect()
                 except:
                     pass
                 device_objs.pop(mac, None)
-                connect(device.alias, mac, typee) #0 for sensor; 1 for ringer
+                queue_connect(jobs_queue, device.alias, mac, typee) #0 for sensor; 1 for ringer
 
     check(0, sensor_objs)
     check(1, ringer_objs)
 
-def reset(measure=False):
-    global sensor_objs, ringer_objs
 
-    if measure:
-        ble.send_command(sensor_objs, "RESET_AND_MEASURE\n")
-        ble.send_command(ringer_objs, "RESET\n")
-    else:
-        ble.send_command({**sensor_objs, **ringer_objs}, "RESET\n")
+
+def reset(measure=False):
+    '''Enqueue a reset job
+
+    Args:
+        measure (Bool): True - reset all devices
+                                and make sensors take new measurements
+                        False - reset activated devices
+    '''
+
+    global jobs_queue
+
+    jobs_queue.put({'job':'reset', 'measure':measure})
 
 def renew_data(typee, devices):
     '''Renew sensors_objs or ringers_objs info depending on typee
@@ -111,6 +112,7 @@ def renew_data(typee, devices):
         ringers (dict): mac:Device
     '''
     global sensor_objs, ringer_objs
+    global jobs_queue
 
     if typee == 0:
         old_devices = sensor_objs
@@ -126,46 +128,54 @@ def renew_data(typee, devices):
             pass
         old_devices.pop(mac, None)
 
-    print (devices)
+    print ("Renew data received: ", devices)
     for device_data in devices.values():
         print (device_data)
         #typee: 0 for sensor, 1 for ringer
-        connect(device_data['alias'], device_data['mac'], typee)
+        queue_connect(jobs_queue, device_data['alias'], device_data['mac'], typee)
 
 
 def setup():
+    global  sensor_objs, ringer_objs
+    global jobs_queue
+
     communicator.Communicator(reset, renew_data, ble.scan).start()
 
     time.sleep(5)
 
-    #call these to initiate NOTIFY PIPE MSG
-    renew_data(0, communicator.Communicator.get_sensrs())
+    #call these to get
+    renew_data(0, communicator.Communicator.get_sensors())
     renew_data(1, communicator.Communicator.get_ringers())
 
 
+    #create workers to deal with devices loosing connection and reconnecting
+    number_of_threads = len(sensor_objs) + len(ringer_objs) + 1 #make sure there are enough threats
+    thread_executor =  ThreadPoolExecutor()
+    for i in range(0, number_of_threads):
+        thread_executor.submit(Worker, i, jobs_queue, sensor_objs, ringer_objs)
+    print ('\nSetup DONE\n')
+
 def main():
     global sensor_objs, ringer_objs
+    global jobs_queue
 
-    #TODO IMPLEMENT A THREAT POOL and task queue
-    #unmonitored spawning of threats is bound to create problems
-    #https://stackoverflow.com/questions/19369724/the-right-way-to-limit-maximum-number-of-threads-running-at-once
     counter = 1
     while True:
         #go through all sensors
         #ringers don't send data, so don't bother
-        for _, sensor in sensor_objs.items():
+        for sensor in list(sensor_objs.values()):
             try:
                 if sensor.waitForNotifications(1.0):
                     continue
             except Exception as e:
-                # Allow ble.check_alive to deal with connections
-                # this code is only concerned by notifications
+                # Allow check_alive to deal with connections
+                # this code is only concerned with notifications
                 print (str(e))
 
-        check_alive(sensor_objs, ringer_objs)
-        time.sleep(1)
+        check_alive(jobs_queue, sensor_objs, ringer_objs)
         print (counter, end='\r')
         counter+=1
+        time.sleep(3)
 
 if __name__== "__main__":
     setup()

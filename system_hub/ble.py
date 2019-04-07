@@ -35,68 +35,59 @@ def scan():
 
     return data
 
-def receive_sensor_msg(ringer_objs):
-    '''Deal with received sensor msg
-
-    Args:
-        msg (String): msg from sensor
-        ringer_objs (dict): mac:Device
-    '''
-
-    def deal_with_sensor_msg(msg):
-        print ("PROCESSING SENSOR MSG\n")
-
-        if msg == b"ALARM\n":
-            print ("ALARM acknowledged")
-
-            for ringer in ringer_objs.values():
-                ringer.send_message("RING\n")
-
-    return deal_with_sensor_msg
 
 def send_command(recipients, command):
-    for recipient in recipients.values():
-        recipient.send_message(command)
-
-def create_sensor_objects(data, sensors_objs, ringer_objs):
-    '''Create sensor objects
+    '''send command to all recipients
 
     Args:
-        data (dict): mac:alias
-        sensors_objs (dict): mac:sensor_device
-        ringer_objs (dict): mac:ringer_device
+        recipients (set()):
+        command (String): command to send
     '''
 
-    for mac, alias in data.items():
-        print ("Creating sensor with: ", mac, alias)
-        try:
-            s_delegate = SensorDelegate(alias, receive_sensor_msg(ringer_objs))
-            device = Device(alias, CHARACTERISTIC, mac, s_delegate)
-            device.withDelegate(s_delegate)
-            sensors_objs[mac] = device
-        except Exception as e:
-            print (str(e))
-            return 1    #return error code, so rerun scan
+    for recipient in recipients:
+        recipient.send_message(command)
+
+def create_sensor_object(mac, alias, sensors_objs, raise_alarm_func):
+    '''Create sensor object
+
+    Args:
+        mac (String): device mac address
+        alias (String): device alias
+        sensors_objs (dict): mac:sensor_device
+        raise_alarm_func (func): pass to SensorDelegate
+    '''
+
+    print ("Creating sensor with: ", mac, alias)
+    try:
+        device = Device(alias, CHARACTERISTIC, mac)
+        s_delegate = SensorDelegate(device, raise_alarm_func)
+        device.withDelegate(s_delegate)
+
+        sensors_objs[mac] = device
+    except Exception as e:
+        print (str(e))
+        return 1    #return error code, so rerun scan
     return 0
 
-def create_ringer_objects(data, ringer_objs):
+def create_ringer_object(mac, alias, ringer_objs):
     '''Create ringer object
 
     Args:
-        data (dict): mac:alias
+        mac (String): device mac address
+        alias (String): device alias
         ringer_objs (dict): mac:ringer_device
     '''
 
-    for mac, alias in data.items():
-        print ("Creating ringer with: ", mac, alias)
-        try:
-            r_delegate = RingerDelegate(alias) 
-            device = Device(alias, CHARACTERISTIC, mac, r_delegate)
-            device.withDelegate(r_delegate)
-            ringer_objs[mac] = device
-        except Exception as e:
-            print (str(e))
-            return 1    #return error code, so rerun scan
+    print ("Creating ringer with: ", mac, alias)
+    try:
+        device = Device(alias, CHARACTERISTIC, mac)
+        r_delegate = RingerDelegate(device)
+        device.withDelegate(r_delegate)
+
+        ringer_objs[mac] = device
+    except Exception as e:
+        print (str(e))
+        return 1    #return error code, so rerun scan
     return 0
 
 

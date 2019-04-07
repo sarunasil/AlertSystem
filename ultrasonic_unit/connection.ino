@@ -4,6 +4,9 @@
 #define ARDUINO_TX 4
 #define STATE_PIN 7
 
+#define ALARM_COMMAND "ALARM\n"
+#define RESET_ACK_COMMAND "RESET_ACK\n"
+
 SoftwareSerial BTSerial(ARDUINO_RX, ARDUINO_TX); //RX|TX
 
 // it goes to AT mode without EN pin immediatelly
@@ -45,18 +48,6 @@ int get_state(){
     return current_state;
 }
 
-//void program_bluetooth(){
-//    if(current_state == 0 && Serial.available()){
-//        input = Serial.readString();
-//        Serial.print("Sending: ");
-//        Serial.println(input);
-//        BTSerial.print(input);
-//    }
-//    else{
-//        Serial.println("Can't program bluetooth module while it's connected");
-//    }
-//}
-
 void from_bluetooth_to_serial(){
     get_state();
     //read from the HM-10 and print in the Serial
@@ -85,7 +76,16 @@ String ble_listen(){
 
 void ble_send_alarm(){
     if (current_state){
-        Serial.println("Sending: ALARM");
-        BTSerial.print("ALARM\n");
+        Serial.print("Sending: ");
+        Serial.println(ALARM_COMMAND);
+        BTSerial.print(ALARM_COMMAND);
+    }
+}
+
+void ble_send_reset_ack(){
+    if (current_state){
+        Serial.print("Sending: ");
+        Serial.println(RESET_ACK_COMMAND);
+        BTSerial.print(RESET_ACK_COMMAND);
     }
 }

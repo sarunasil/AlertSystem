@@ -14,14 +14,13 @@ void react_to_hub_response(String response){
     Serial.print(response);
     Serial.println("'");
     
-    Serial.print("COMMAND = '");
-    Serial.print(RESET_ALARM_COMMAND);
-    Serial.println("'");
     if (response == RESET_ALARM_COMMAND){
         ring_status = 0;
+        ble_send_reset_ack();
     }
     else if (response == RING_COMMAND){
         ring_status = 1;
+        ble_send_ack();
     }
 }
 
@@ -40,12 +39,12 @@ void loop() {
     else{    
         if (get_state()){
             hub_message = ble_listen();
+            delay(50);
             react_to_hub_response(hub_message);
-
-            if (ring_status){
-                ring();
-            }
-            delay(2000);
+        }
+        
+        if (ring_status){
+            ring();
         }
     
         delay(250);

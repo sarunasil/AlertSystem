@@ -4,12 +4,13 @@ from bluepy.btle import Peripheral
 
 class Device(Peripheral):
 
-    def __init__(self, alias, characteristic, mac, handler):
+    def __init__(self, alias, characteristic, mac):
         super().__init__(mac)
 
         self.alias = alias
         self.characteristic = characteristic
-        self.handler = handler #maybe save it here if it's getting removed
+        self.dev_status = 0 # 0 - no alarm, 1 - alarm
+
 
     def send_message(self, msg):
         try:

@@ -4,19 +4,34 @@ from bluepy.btle import DefaultDelegate
 
 class SensorDelegate(DefaultDelegate):
 
-    def __init__(self, device_alias, alarm_func):
+    def __init__(self, device, raise_alarm_func):
+        '''Deals with incoming messages
+
+        Args:
+            device (Device): device this is attached to
+            raise_alarm_func (func): func to be called 
+            to queue an alarm job
+        '''
         super().__init__()
 
-        self.device_alias = device_alias
-        self.alarm_func = alarm_func
+        self.device = device
+        self.raise_alarm_func = raise_alarm_func
 
     def handleNotification(self,cHandle,data):
 
-        try:
-            print(data)
-            self.alarm_func(data)
-        except Exception as e:
-            print (str(e))
+        print(data)
+        if data == b"ALARM\n":
+            print ("ALARM acknowledged")
+
+            self.device.dev_status = 1
+            self.raise_alarm_func(self.device.alias)
+            self.device.send_message("ACK\n")
+        elif data == b'RESET_ACK\n':
+            print ("SENSOR ACK RESET")
+
+            self.device.dev_status = 0
+
+
 
 class RingerDelegate(DefaultDelegate):
 
@@ -27,7 +42,12 @@ class RingerDelegate(DefaultDelegate):
 
     def handleNotification(self,cHandle,data):
 
-        try:
-            print(data)
-        except:
-            pass
+        print(data)
+        if data == b"ACK\n":
+            print ("RINGER ACK ALARM")
+
+            self.device.dev_status = 1
+        elif data == b'RESET_ACK\n':
+            print ("RINGER ACK RESET")
+
+            self.device.dev_status = 0

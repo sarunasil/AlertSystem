@@ -51,7 +51,7 @@ class Communicator(threading.Thread):
 
                     if msg == "SENSORS":
                         print("PULLING LIST OF SENSORS")
-                        sensors = self.get_sensrs()
+                        sensors = self.get_sensors()
                         self.update_devices_func(0, sensors) #0 - sensor; 1 - ringer
                     elif msg == "RINGERS":
                         print("PULLING LIST OF RINGERS")
@@ -59,7 +59,7 @@ class Communicator(threading.Thread):
                         self.update_devices_func(1, ringers) #0 - sensor; 1 - ringer
 
     @staticmethod
-    def get_sensrs():
+    def get_sensors():
         sensors = requests.get("http://localhost:8080/devices/sensors").json()
         return sensors
 

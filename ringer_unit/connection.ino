@@ -4,6 +4,9 @@
 #define ARDUINO_TX 4
 #define STATE_PIN 7
 
+#define ACK_COMMAND "ACK\n"
+#define RESET_ACK_COMMAND "RESET_ACK\n"
+
 SoftwareSerial BTSerial(ARDUINO_RX, ARDUINO_TX); //RX|TX
 
 // it goes to AT mode without EN pin immediatelly
@@ -71,9 +74,18 @@ String ble_listen(){
     return msg;
 }
 
-//void ble_send_alarm(){
-//    if (current_state){
-//        Serial.println("Sending: ALARM");
-//        BTSerial.print("ALARM");
-//    }
-//}
+void ble_send_ack(){
+    if (current_state){
+        Serial.print("Sending: ");
+        Serial.println(ACK_COMMAND);
+        BTSerial.print(ACK_COMMAND);
+    }
+}
+
+void ble_send_reset_ack(){
+    if (current_state){
+        Serial.print("Sending: ");
+        Serial.println(RESET_ACK_COMMAND);
+        BTSerial.print(RESET_ACK_COMMAND);
+    }
+}
