@@ -49,11 +49,17 @@ class Worker:
         #repeat until connected
         while True:
             if job['typee'] == 0:
+                if job['mac'] in self.sensor_objs:
+                    break
+
                 error = ble.create_sensor_object(job['mac'], job['alias'], self.sensor_objs, job['alarm_func'])
                 if error == 0:
                     communicator.Communicator.established_connection_with_sensor(job['alias'])
                     break
             elif job['typee'] == 1:
+                if job['mac'] in self.ringer_objs:
+                    break
+
                 error = ble.create_ringer_object(job['mac'], job['alias'], self.ringer_objs)
                 if error == 0:
                     communicator.Communicator.established_connection_with_ringer(job['alias'])

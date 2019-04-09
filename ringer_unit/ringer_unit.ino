@@ -14,11 +14,11 @@ void react_to_hub_response(String response){
     Serial.print(response);
     Serial.println("'");
     
-    if (response == RESET_ALARM_COMMAND){
+    if (response.indexOf(RESET_ALARM_COMMAND) >= 0){
         ring_status = 0;
         ble_send_reset_ack();
     }
-    else if (response == RING_COMMAND){
+    else if (response.indexOf(RING_COMMAND) >= 0){
         ring_status = 1;
         ble_send_ack();
     }

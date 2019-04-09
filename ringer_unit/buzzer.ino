@@ -2,11 +2,6 @@
 #define TIME_DELAY 150
 #define LED 13
 
-void ringer_setup(){
-    pinMode(BUZZER, OUTPUT);
-    Serial.println("Buzzer setup done.");
-}
-
 void ring(){
     digitalWrite(BUZZER, HIGH);
     digitalWrite(LED, HIGH);
