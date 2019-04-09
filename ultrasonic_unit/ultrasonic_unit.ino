@@ -2,6 +2,8 @@
 #define RESET_ALARM_COMMAND "RESET\n"
 #define RESET_AND_MEASURE_COMMAND "RESET_AND_MEASURE\n"
 #define ACK_COMMAND "ACK\n"
+
+#define SEPARATOR_CHAR '\n'
 //MAIN FILE
 
 //alarm_status codes:
@@ -19,6 +21,11 @@ void react_to_hub_response(String response){
     Serial.print("Response = '");
     Serial.print(response);
     Serial.println("'");
+
+    int separator_index = response.indexOf(SEPARATOR_CHAR);
+    if (separator_index != -1){
+        response = response.substring(0, separator_index);
+    }
     
     if (response == RESET_ALARM_COMMAND){
         alarm_status = 0;
@@ -54,7 +61,7 @@ void loop() {
                 if (alarm_status == 1){
                     ble_send_alarm();
                 }
-                delay(5000);
+                delay(2000);
     
                 hub_response = ble_listen();
                 react_to_hub_response(hub_response);
