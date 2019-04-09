@@ -124,6 +124,8 @@ class Worker:
         Does not wait for confirmation - one time execution.
         '''
 
+        resend_period = 2#seconds
         ble.send_command(self.sensor_objs.values(), "RESET_AND_MEASURE\n")
         ble.send_command(self.ringer_objs.values(), "RESET\n")
+        time.sleep(resend_period)
 

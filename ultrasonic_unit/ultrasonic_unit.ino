@@ -54,7 +54,7 @@ void loop() {
                 if (alarm_status == 1){
                     ble_send_alarm();
                 }
-                delay(1000);
+                delay(5000);
     
                 hub_response = ble_listen();
                 react_to_hub_response(hub_response);
