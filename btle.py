@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+#SHAMELESSLY COPIED FROM: https://github.com/IanHarvey/bluepy
+#as some modifications there needed
+
 from __future__ import print_function
 
 """Bluetooth Low Energy Python interface"""
