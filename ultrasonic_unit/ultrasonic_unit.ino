@@ -1,6 +1,6 @@
 
 #define RESET_ALARM_COMMAND "RESET\n"
-#define RESET_AND_MEASURE_COMMAND "RESET_AND_MEASURE\n"
+#define RESET_AND_MEASURE_COMMAND "RESEET_AND_MEASURE\n"
 #define ACK_COMMAND "ACK\n"
 
 #define SEPARATOR_CHAR '\n'
@@ -22,21 +22,17 @@ void react_to_hub_response(String response){
     Serial.print(response);
     Serial.println("'");
 
-    int separator_index = response.indexOf(SEPARATOR_CHAR);
-    if (separator_index != -1){
-        response = response.substring(0, separator_index);
-    }
     
-    if (response == RESET_ALARM_COMMAND){
+    if (response.indexOf(RESET_ALARM_COMMAND) >= 0){
         alarm_status = 0;
         ble_send_reset_ack();
     }
-    else if (response == RESET_AND_MEASURE_COMMAND){
+    else if (response.indexOf(RESET_AND_MEASURE_COMMAND) >= 0){
         alarm_status = 0;
         set_initial_value();
         ble_send_reset_ack();
     }
-    else if (response == ACK_COMMAND){
+    else if (response.indexOf(ACK_COMMAND) >= 0){
         alarm_status = 2;
     }
 }
@@ -61,7 +57,7 @@ void loop() {
                 if (alarm_status == 1){
                     ble_send_alarm();
                 }
-                delay(2000);
+                delay(1000);
     
                 hub_response = ble_listen();
                 react_to_hub_response(hub_response);

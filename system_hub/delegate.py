@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 from bluepy.btle import DefaultDelegate
-from threading import Lock
 
 class SensorDelegate(DefaultDelegate):
 
@@ -15,24 +14,23 @@ class SensorDelegate(DefaultDelegate):
         '''
         super().__init__()
 
-        self.lock = Lock()
         self.device = device
         self.raise_alarm_func = raise_alarm_func
 
     def handleNotification(self,cHandle,data):
 
-        with self.lock:
-            print(data)
-            if data == b"ALARM\n" and self.device.dev_status == 0:
-                print ("ALARM acknowledged")
+        print(data)
+        if data == b"ALARM\n":
+            print ("ALARM acknowledged")
 
-                self.device.dev_status = 1
+            if self.device.dev_status == 0:
                 self.raise_alarm_func(self.device.alias)
-                self.device.send_message("ACK\n")
-            elif data == b'RESET_ACK\n':
-                print ("SENSOR ACK RESET")
+            self.device.dev_status = 1
+            self.device.send_message("ACK\n")
+        elif data == b'RESET_ACK\n':
+            print ("SENSOR ACK RESET")
 
-                self.device.dev_status = 0
+            self.device.dev_status = 0
 
 
 
