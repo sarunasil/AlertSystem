@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, abort
+import datetime
 import os
 
 
@@ -12,7 +13,11 @@ pipefile = os.open(pipe, os.O_WRONLY)
 
 data = {
     "sensors": {},
-    "ringers": {}
+    "ringers": {},
+    "scanning": {
+        "timestamp": 0,
+        "result": None
+    }
 }
 
 
@@ -62,7 +67,41 @@ def alarms_management():
             print("WRITING RESET")
             os.write(pipefile, b"RESET\n")
 
-        return jsonify({"msg": "Sent to BLE handler"})
+        return jsonify({"msg": "Sent stop command to BLE handler"})
+
+
+@app.route('/devices/scanning', methods=['POST', 'GET'])
+def scanning():
+
+    global pipefile
+
+    if request.method == 'POST':
+        os.write(pipefile, b"SCAN\n")
+        return jsonify({"msg": "Sent scan command to BLE handler"})
+    elif request.method == 'GET':
+        if data["scanning"]["result"] is not None:
+            current_timestamp = datetime.datetime.now().timestamp()
+            if current_timestamp - data["scanning"]["timestamp"] >= 120:  # 120 seconds have passed since last scanning was executed
+                data["scanning"]["result"] = None
+                return jsonify({"msg": "Stale scanning results, please send a POST request for scanning to be performed by the BLE handler"})
+            return jsonify(data["scanning"]["result"])
+        else:
+            return jsonify({"msg": "No scanning data available, please send a POST request for scanning to be performed by the BLE handler"})
+
+
+@app.route('/devices/scanning/results', methods=['POST'])
+def scanning_results_from_handler():
+
+    if request.method == 'POST':
+
+        body = request.json
+        if body is None:
+            abort(400, "Expecting JSON body.")
+
+        data["scanning"]["result"] = body
+        data["scanning"]["timestamp"] = int(datetime.datetime.now().timestamp())
+
+        return jsonify({"msg": "Scanning results have been saved"})
 
 
 def handle_request_for_devices(device_type):

@@ -99,4 +99,4 @@ class Communicator(threading.Thread):
     def scan_result(data):
         # ignoring this for now
         print("Sending scan result")
-        pass
+        requests.post("http://localhost:8080/devices/scanning/results", json=data)
