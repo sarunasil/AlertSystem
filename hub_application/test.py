@@ -17,19 +17,20 @@ def test_sensors():
 def test_ringers():
 
     api_url = "{0}/ringers".format(base_url)
+
     templatetest_devices(api_url)
 
 
 def templatetest_devices(api_url):
     
-    assert requests.get(api_url).json() == {}
+    assert requests.get(api_url).json() == []
 
     assert requests.post(api_url, json={"alias": "test1", "mac": "mac1"}).json() == {"status": "disconnected", "alias": "test1", "mac": "mac1"}
     assert requests.post(api_url, json={"alias": "test2", "mac": "mac2"}).json() == {"status": "disconnected", "alias": "test2", "mac": "mac2"}
 
-    assert requests.get(api_url).json() == {"test1": {"status": "disconnected", "alias": "test1", "mac": "mac1"}, "test2": {"status": "disconnected", "alias": "test2", "mac": "mac2"}}
-    assert requests.delete(api_url).json() == {}
-    assert requests.get(api_url).json() == {}
+    assert requests.get(api_url).json() == [{"status": "disconnected", "alias": "test1", "mac": "mac1"}, {"status": "disconnected", "alias": "test2", "mac": "mac2"}]
+    assert requests.delete(api_url).json() == []
+    assert requests.get(api_url).json() == []
 
 
 def test_sensors_instance():

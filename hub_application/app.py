@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, abort
 import datetime
 import os
+import model
 
 
 app = Flask(__name__)
@@ -11,9 +12,9 @@ if not os.path.exists(pipe):
 
 pipefile = os.open(pipe, os.O_WRONLY)
 
+
+# stores the scanning data in memory
 data = {
-    "sensors": {},
-    "ringers": {},
     "scanning": {
         "timestamp": 0,
         "result": None
@@ -24,25 +25,25 @@ data = {
 @app.route('/devices/sensors', methods=['GET', 'POST', 'DELETE'])
 def sensors():
 
-    return jsonify(handle_request_for_devices("sensors"))
+    return jsonify(handle_request_for_devices("sensor"))
 
 
 @app.route('/devices/sensors/<alias>', methods=['POST', 'GET', 'DELETE'])
 def sensors_instance(alias):
 
-    return jsonify(handle_request_for_device_instance("sensors", alias))
+    return jsonify(handle_request_for_device_instance("sensor", alias))
 
 
 @app.route('/devices/ringers', methods=['GET', 'POST', 'DELETE'])
 def ringers():
 
-    return jsonify(handle_request_for_devices("ringers"))
+    return jsonify(handle_request_for_devices("ringer"))
 
 
 @app.route('/devices/ringers/<alias>', methods=['POST', 'GET', 'DELETE'])
 def ringers_instance(alias):
 
-    return jsonify(handle_request_for_device_instance("ringers", alias))
+    return jsonify(handle_request_for_device_instance("ringer", alias))
 
 
 @app.route('/alarms', methods=['POST', 'DELETE'])
@@ -113,50 +114,54 @@ def handle_request_for_devices(device_type):
 
         mac_addr, alias = validate_post_body(body)  # raises a 400 Bad request in case of an invalid body
 
-        if alias in data[device_type]:
+        if getattr(model, "{0}_exists".format(device_type))(alias):
             abort(409, "A device with that name was already registered in {0}.".format(device_type))
 
-        data[device_type][alias] = {"mac": mac_addr, "alias": alias, "status": "disconnected"}
+        device_body = getattr(model, "add_{0}".format(device_type))(alias, mac_addr)
 
         os.write(pipefile, b"NOTIFY:" + device_type.upper().encode("utf-8") + b"\n")
 
-        return data[device_type][alias]
+        return device_body
 
     elif request.method == 'GET':
-        return data[device_type]
+
+        return getattr(model, "get_{0}s".format(device_type))()
 
     elif request.method == 'DELETE':
-        data[device_type] = {}
+
+        getattr(model, "delete_{0}s".format(device_type))()
 
         os.write(pipefile, b"NOTIFY:" + device_type.upper().encode("utf-8") + b"\n")
 
-        return data[device_type]
+        return []
 
 
 def handle_request_for_device_instance(device_type, alias):
 
     # device_type should be "ringers" or "sensors"
 
-    if alias not in data[device_type]:
-        abort(404, "A device with that name was not registered in {0}.".format(device_type))
+    if not getattr(model, "{0}_exists".format(device_type))(alias):
+        abort(404, "A {0} device with that alias was not registered.".format(device_type))
 
     if request.method == 'POST':
 
         body = request.json
-        if body is None or "status" not in body:
+        if body is None or body.keys() != {"status"}:
             abort(400, "Expecting JSON body.")
 
-        data[device_type][alias]["status"] = body["status"]
+        getattr(model, "update_{0}".format(device_type))(alias, body)
 
-        return data[device_type][alias]
+        return getattr(model, "get_{0}".format(device_type))(alias)
 
     elif request.method == 'GET':
 
-        return data[device_type][alias]
+        return getattr(model, "get_{0}".format(device_type))(alias)
 
     elif request.method == 'DELETE':
 
-        return data[device_type].pop(alias)
+        to_delete = getattr(model, "get_{0}".format(device_type))(alias)
+        getattr(model, "delete_{0}".format(device_type))(alias)
+        return to_delete
 
 
 def validate_post_body(body):
