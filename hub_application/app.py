@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, abort
 import datetime
 import os
 import model
+import requests
 
 
 app = Flask(__name__)
@@ -55,6 +56,9 @@ def alarms_management():
         # read the body
         print("Received alarm data", request.json)
         print("Sending to cloud")
+
+        requests.post('http://3.8.68.131:8080/alarms', json={"msg": "Alarm has been triggered - {0}".format(request.json)})
+
         return jsonify({"msg": "Sent to cloud"})
 
     elif request.method == 'DELETE':
@@ -185,4 +189,4 @@ def validate_post_body(body):
 
 if __name__ == "__main__":
 
-    app.run(port=8080)
+    app.run(host='0.0.0.0', port=8080)
