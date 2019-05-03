@@ -4,7 +4,7 @@ import getpass
 import datetime
 import logging
 from pathlib import Path
-
+from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver
 
 # logging configuration
 LOG_FILE = "/var/log/alarms.log"
@@ -22,8 +22,6 @@ logger.addHandler(filehandler)
 app = Flask(__name__)
 
 
-receivers = []  # a list of the receivers' email addresses, TODO this must be hardcoded before starting the application
-
 smtp_port = 465
 smtp_server = "smtp.gmail.com"
 email = input("Email:")
@@ -35,8 +33,51 @@ Received an alarm on {0} UTC
 {1}"""
 
 
+@app.route('/receivers', methods=['POST', 'GET', 'DELETE'])
+def api_receivers():
+
+    if request.method == 'GET':
+        return jsonify(get_receivers())
+
+    elif request.method == 'DELETE':
+        return jsonify(delete_receivers())
+
+    elif request.method == 'POST':
+        body = request.json
+
+        if body is None:
+            abort(400, "Expecting JSON body.")
+
+        if body.keys() != {"email"}:
+            abort(400, "Invalid JSON content.")
+
+        if receiver_email_exists(body["email"]):
+            abort(409, "Email receiver already exists.")
+
+        return jsonify(create_receiver(body["email"]))
+
+
+@app.route('/receivers/<uuid:index>', methods=['GET', 'DELETE'])
+def api_receivers_instance(index):
+
+    email_object = get_receiver(index)
+
+    if email_object is None:
+        abort(404, "Email receiver with the given ID doesn't exist.")
+
+    if request.method == 'GET':
+
+        return jsonify(email_object)
+
+    elif request.method == 'DELETE':
+
+        return jsonify(delete_receiver(email_object))
+
+
 @app.route('/alarms', methods=['POST', 'GET'])
-def alert():
+def api_alert():
+
+    email_addresses = get_receivers_emails()
 
     if request.method == 'POST':
         body = request.json
@@ -49,16 +90,17 @@ def alert():
 
         msg = body['msg']
 
-        logger.warning("Received alarm with message - {0}".format(msg))
+        logger.warning("Received alarm with message - {0}, potential receivers - {1}".format(msg, email_addresses))
 
-        if request.args.get("with_email", "true") == "true":
-            logger.info("Sending alarm to receivers - {0}".format(receivers))
+        if len(email_addresses) > 0 and request.args.get("with_email", "true") == "true":
+            logger.info("Sending alarm to receivers - {0}".format(email_addresses))
             # send the email acknowledging an alarm
             email_msg = message.format(datetime.datetime.now(), msg)
             server_ssl = smtplib.SMTP_SSL(smtp_server, smtp_port)
             server_ssl.login(email, password)
-            server_ssl.sendmail(email, receivers, email_msg)
+            server_ssl.sendmail(email, email_addresses, email_msg)
             server_ssl.quit()
+
         logger.info("----------------------------------------------------------------------------")
 
         return jsonify({"msg": "Alarm acknowledged."})
