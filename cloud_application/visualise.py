@@ -35,27 +35,38 @@ def fetch_original_alerts():
     return timestamps
 
 
-def update_alerts_graph(timestamps_values):
+def update_alerts_graph():
+
     original_alerts = fetch_original_alerts()
+
+    start = datetime.datetime.today().date()
+    end = start + datetime.timedelta(days=1)
+
+    if len(original_alerts) > 0:
+        start = min(start, datetime.datetime.date(datetime.datetime.strptime(original_alerts[0], "%Y-%m-%d %H:%M:%S,%f")))
+        end = max(end, datetime.timedelta(days=1) + datetime.datetime.date(datetime.datetime.strptime(original_alerts[-1], "%Y-%m-%d %H:%M:%S,%f")))
+
+    delta = int((end - start).total_seconds() / 60)
+    start_str = datetime.datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+    end_str = datetime.datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+
+    timestamps = pandas.date_range(start=start_str, end=end_str, periods=delta + 1)
+    timestamps_values = {str(timestamp): 0 for timestamp in timestamps}
+
     for timestamp in original_alerts:
         original_timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S,%f")
         closest_timestamp = datetime.datetime(year=original_timestamp.year, month=original_timestamp.month, day=original_timestamp.day,
                                               hour=original_timestamp.hour, minute=original_timestamp.minute)
 
         closest_timestamp = str(closest_timestamp)
-        if closest_timestamp in timestamps_values:
-            timestamps_values[closest_timestamp] += 1
+        timestamps_values[closest_timestamp] += 1
+
+    return timestamps_values, start_str, end_str
 
 
 def update_graph():
-    start = datetime.datetime.today().date()
-    end = start + datetime.timedelta(days=1)
-    start_str = datetime.datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
-    end_str = datetime.datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
 
-    timestamps = pandas.date_range(start=start_str, end=end_str, periods=24 * 60 + 1)
-    timestamps_values = {str(timestamp): 0 for timestamp in timestamps}
-    update_alerts_graph(timestamps_values)
+    timestamps_values, start_str, end_str = update_alerts_graph()
 
     x_values = list(timestamps_values.keys())
     y_values = list(timestamps_values.values())
