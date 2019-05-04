@@ -90,7 +90,9 @@ def api_alert():
 
         msg = body['msg']
 
-        logger.warning("Received alarm with message - {0}, potential receivers - {1}".format(msg, email_addresses))
+        logger.info("Received alarm with message - {0}, potential receivers - {1}".format(msg, email_addresses))
+
+        logger.warning(msg)
 
         if len(email_addresses) > 0 and request.args.get("with_email", "true") == "true":
             logger.info("Sending alarm to receivers - {0}".format(email_addresses))
