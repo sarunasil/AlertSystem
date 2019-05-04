@@ -3,7 +3,12 @@ import smtplib
 import getpass
 import datetime
 import logging
+import os
 from pathlib import Path
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver
 
 # logging configuration
@@ -21,6 +26,10 @@ logger.addHandler(filehandler)
 # app config. and init.
 app = Flask(__name__)
 
+app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
+jwt = JWTManager(app)
+jwt_user = os.environ["JWT_USER"]
+jwt_password = os.environ["JWT_PASSWORD"]
 
 smtp_port = 465
 smtp_server = "smtp.gmail.com"
@@ -33,7 +42,27 @@ Received an alarm on {0} UTC
 {1}"""
 
 
+@app.route('/login', methods=['POST'])
+def login():
+
+    if request.json is None:
+        abort(400, "Expecting JSON body.")
+
+    if request.json.keys() != {"username", "password"}:
+        abort(400, "Expecting JSON body with username and password.")
+
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+
+    if username != jwt_user or password != jwt_password:
+        return jsonify({"msg": "Authentication failure."}), 401
+
+    access_token = create_access_token(identity=username)
+    return jsonify({"token": access_token}), 200
+
+
 @app.route('/receivers', methods=['POST', 'GET', 'DELETE'])
+@jwt_required
 def api_receivers():
 
     if request.method == 'GET':
@@ -58,6 +87,7 @@ def api_receivers():
 
 
 @app.route('/receivers/<uuid:index>', methods=['GET', 'DELETE'])
+@jwt_required
 def api_receivers_instance(index):
 
     email_object = get_receiver(index)
@@ -75,6 +105,7 @@ def api_receivers_instance(index):
 
 
 @app.route('/alarms', methods=['POST', 'GET'])
+@jwt_required
 def api_alert():
 
     email_addresses = get_receivers_emails()
