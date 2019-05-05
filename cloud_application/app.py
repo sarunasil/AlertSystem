@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, abort
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
 import smtplib
 import getpass
 import datetime
@@ -107,6 +107,8 @@ def api_receivers_instance(index):
 @jwt_required
 def api_alert():
 
+    user = get_jwt_identity()
+
     email_addresses = get_receivers_emails()
 
     if request.method == 'POST':
@@ -120,9 +122,9 @@ def api_alert():
 
         msg = body['msg']
 
-        logger.info("Received alarm with message - {0}, potential receivers - {1}".format(msg, email_addresses))
+        logger.info("Received alarm from {0} with message - {1}, potential receivers - {2}".format(user, msg, email_addresses))
 
-        logger.warning(msg)
+        logger.warning(user)
 
         if len(email_addresses) > 0 and request.args.get("with_email", "true") == "true":
             logger.info("Sending alarm to receivers - {0}".format(email_addresses))
