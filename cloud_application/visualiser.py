@@ -4,6 +4,7 @@ import dash_html_components as html
 import pandas
 import datetime
 import requests
+import os
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -14,7 +15,11 @@ def fetch_original_alerts():
 
     timestamps = []
 
-    response = requests.get("http://localhost:8080/alarms")
+    response = requests.post("http://localhost:8080/login", json={"username": os.environ["JWT_USER"], "password": os.environ["JWT_PASSWORD"]})
+    token = response.json()["token"]
+    headers = {"Authorization": "Bearer {0}".format(token)}
+
+    response = requests.get("http://localhost:8080/alarms", headers=headers)
     if response.status_code != 200:
         return timestamps
 
