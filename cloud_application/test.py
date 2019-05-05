@@ -1,7 +1,8 @@
 import requests
+import os
 
 
-response = requests.post("http://localhost:8080/login", json={"username": "admin", "password": "admin"})
+response = requests.post("http://localhost:8080/login", json={"username": os.environ["JWT_USER"], "password": os.environ["JWT_PASSWORD"]})
 token = response.json()["token"]
 headers = {"Authorization": "Bearer {0}".format(token)}
 

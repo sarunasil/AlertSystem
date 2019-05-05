@@ -1,14 +1,11 @@
 from flask import Flask, request, jsonify, abort
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 import smtplib
 import getpass
 import datetime
 import logging
 import os
 from pathlib import Path
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
-)
 from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver
 
 # logging configuration
