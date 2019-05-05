@@ -4,6 +4,18 @@ import requests
 
 pipe = "/tmp/communication"
 
+headers = {}
+
+
+def create_token():
+
+    global headers
+
+    response = requests.post("http://localhost:8080/login", json={"username": os.environ["JWT_USER"], "password": os.environ["JWT_PASSWORD"]})
+    token = response.json()["token"]
+    headers["Authorization"] = "Bearer {0}".format(token)
+
+
 # commands to receive:
 #   reset (simple reset, or reset and meassure)
 #   notify: which updates whole sensors or ringers list
@@ -60,12 +72,22 @@ class Communicator(threading.Thread):
 
     @staticmethod
     def get_sensors():
-        sensors = requests.get("http://localhost:8080/devices/sensors").json()
+        response = requests.get("http://localhost:8080/devices/sensors", headers=headers)
+        if response.status_code == 401:
+            create_token()
+            response = requests.get("http://localhost:8080/devices/sensors", headers=headers)
+
+        sensors = response.json()
         return sensors
 
     @staticmethod
     def get_ringers():
-        ringers = requests.get("http://localhost:8080/devices/ringers").json()
+        response = requests.get("http://localhost:8080/devices/ringers", headers=headers)
+        if response.status_code == 401:
+            create_token()
+            response = requests.get("http://localhost:8080/devices/ringers", headers=headers)
+
+        ringers = response.json()
         return ringers
 
     @staticmethod
@@ -73,30 +95,47 @@ class Communicator(threading.Thread):
         # the assumption is that alias will always be the alias of a sensor
         print("Sending ring")
         # if more data about the alarm needs to be sent to app just include it in the JSON
-        requests.post("http://localhost:8080/alarms", json={"alias": alias})
+        response = requests.post("http://localhost:8080/alarms", json={"alias": alias}, headers=headers)
+        if response.status_code == 401:
+            create_token()
+            requests.post("http://localhost:8080/alarms", json={"alias": alias}, headers=headers)
 
     @staticmethod
     def lost_connection_with_sensor(alias):
         print("Sending lost connection with sensor")
-        requests.post("http://localhost:8080/devices/sensors/{0}".format(alias), json={"status": "disconnected"})
+        response = requests.post("http://localhost:8080/devices/sensors/{0}".format(alias), json={"status": "disconnected"}, headers=headers)
+        if response.status_code == 401:
+            create_token()
+            requests.post("http://localhost:8080/devices/sensors/{0}".format(alias), json={"status": "disconnected"}, headers=headers)
 
     @staticmethod
     def established_connection_with_sensor(alias):
         print("Sending established connection with sensor")
-        requests.post("http://localhost:8080/devices/sensors/{0}".format(alias), json={"status": "connected"})
+        response = requests.post("http://localhost:8080/devices/sensors/{0}".format(alias), json={"status": "connected"}, headers=headers)
+        if response.status_code == 401:
+            create_token()
+            requests.post("http://localhost:8080/devices/sensors/{0}".format(alias), json={"status": "connected"}, headers=headers)
 
     @staticmethod
     def lost_connection_with_ringer(alias):
         print("Sending lost connection with ringer")
-        requests.post("http://localhost:8080/devices/ringers/{0}".format(alias), json={"status": "disconnected"})
+        response = requests.post("http://localhost:8080/devices/ringers/{0}".format(alias), json={"status": "disconnected"}, headers=headers)
+        if response.status_code == 401:
+            create_token()
+            requests.post("http://localhost:8080/devices/ringers/{0}".format(alias), json={"status": "disconnected"}, headers=headers)
 
     @staticmethod
     def established_connection_with_ringer(alias):
         print("Sending established connection with ringer")
-        requests.post("http://localhost:8080/devices/ringers/{0}".format(alias), json={"status": "connected"})
+        response = requests.post("http://localhost:8080/devices/ringers/{0}".format(alias), json={"status": "connected"}, headers=headers)
+        if response.status_code == 401:
+            create_token()
+            requests.post("http://localhost:8080/devices/ringers/{0}".format(alias), json={"status": "connected"}, headers=headers)
 
     @staticmethod
     def scan_result(data):
-        # ignoring this for now
         print("Sending scan result")
-        requests.post("http://localhost:8080/devices/scanning/results", json=data)
+        response = requests.post("http://localhost:8080/devices/scanning/results", json=data, headers=headers)
+        if response.status_code == 401:
+            create_token()
+            requests.post("http://localhost:8080/devices/scanning/results", json=data, headers=headers)
