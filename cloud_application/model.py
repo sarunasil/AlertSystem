@@ -7,6 +7,12 @@ client = pymongo.MongoClient(db_url)
 db = client.get_database()
 
 receivers_collection = db["receivers"]
+users_collection = db["users"]
+
+
+def is_valid_user(username, password):
+
+    return users_collection.find_one({"username": username, "password": password}) is not None
 
 
 def create_receiver(email_address):

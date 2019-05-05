@@ -6,7 +6,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver
+from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver, is_valid_user
 
 # logging configuration
 LOG_FILE = "/var/log/alarms.log"
@@ -25,8 +25,6 @@ app = Flask(__name__)
 
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 jwt = JWTManager(app)
-jwt_user = os.environ["JWT_USER"]
-jwt_password = os.environ["JWT_PASSWORD"]
 
 smtp_port = 465
 smtp_server = "smtp.gmail.com"
@@ -49,9 +47,9 @@ def login():
         abort(400, "Expecting JSON body with username and password.")
 
     username = request.json.get('username', None)
-    password = request.json.get('password', None)
+    user_password = request.json.get('password', None)
 
-    if username != jwt_user or password != jwt_password:
+    if username is None or user_password is None or not is_valid_user(username, user_password):
         return jsonify({"msg": "Authentication failure."}), 401
 
     access_token = create_access_token(identity=username)
