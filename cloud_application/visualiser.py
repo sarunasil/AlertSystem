@@ -1,4 +1,5 @@
 import dash
+import dash_auth
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas
@@ -8,7 +9,15 @@ import os
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
+VALID_CREDENTIALS = [
+    [os.environ["JWT_USER"], os.environ["JWT_PASSWORD"]]
+]
+
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+auth = dash_auth.BasicAuth(
+    app,
+    VALID_CREDENTIALS
+)
 
 
 def fetch_original_alerts():
