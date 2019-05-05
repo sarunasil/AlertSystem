@@ -98,7 +98,9 @@ def api_receivers_instance(index):
 
     elif request.method == 'DELETE':
 
-        return jsonify(delete_receiver(email_object))
+        delete_receiver(email_object)
+
+        return jsonify(email_object)
 
 
 @app.route('/alarms', methods=['POST', 'GET'])
