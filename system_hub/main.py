@@ -129,7 +129,7 @@ def renew_data(typee, devices):
         old_devices.pop(mac, None)
 
     print ("Renew data received: ", devices)
-    for device_data in devices.values():
+    for device_data in devices:
         print (device_data)
         #typee: 0 for sensor, 1 for ringer
         queue_connect(jobs_queue, device_data['alias'], device_data['mac'], typee)

@@ -6,7 +6,7 @@ db = client.get_database()
 
 sensors_collection = db["sensors"]
 
-ringers_collection = db["collections"]
+ringers_collection = db["ringers"]
 
 
 # ---------------------------------------------------------------------------------------- #

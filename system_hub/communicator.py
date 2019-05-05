@@ -46,6 +46,7 @@ class Communicator(threading.Thread):
             while self.running:
 
                 line = pipefile.readline()
+                print(line)
 
                 if line == "RESET\n":#reset ringers and sensors state (stops alarm)
                     self.reset_func()
@@ -61,11 +62,11 @@ class Communicator(threading.Thread):
                     # msg is in format "NOTIFY:{SENSORS or RINGERS}\n", e.g. "NOTIFY:SENSORS\n" or "NOTIFY:RINGERS\n"
                     msg = line[:-1].split(":")[1]
 
-                    if msg == "SENSORS":
+                    if msg == "SENSOR":
                         print("PULLING LIST OF SENSORS")
                         sensors = self.get_sensors()
                         self.update_devices_func(0, sensors) #0 - sensor; 1 - ringer
-                    elif msg == "RINGERS":
+                    elif msg == "RINGER":
                         print("PULLING LIST OF RINGERS")
                         ringers = self.get_ringers()
                         self.update_devices_func(1, ringers) #0 - sensor; 1 - ringer

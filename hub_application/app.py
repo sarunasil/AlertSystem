@@ -158,7 +158,7 @@ def handle_request_for_devices(device_type):
             abort(409, "A device with that name was already registered in {0}.".format(device_type))
 
         device_body = getattr(model, "add_{0}".format(device_type))(alias, mac_addr)
-
+        print("NOTIFY:" + device_type.upper())
         os.write(pipefile, b"NOTIFY:" + device_type.upper().encode("utf-8") + b"\n")
 
         return device_body
