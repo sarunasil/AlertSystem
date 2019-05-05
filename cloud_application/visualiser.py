@@ -7,6 +7,8 @@ import pandas
 import datetime
 import requests
 import pymongo
+import os
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -15,12 +17,9 @@ client = pymongo.MongoClient(db_url)
 db = client.get_database()
 
 users_collection = db["users"]
-root_user = users_collection.find_one({"username": "admin"}, {"_id": False})
-
 VALID_CREDENTIALS = [
-    [user["username"], user["password"]] for user in users_collection.find({}, {'_id': False})
+    [user["username"], user["key"]] for user in users_collection.find({}, {'_id': False})
 ]
-VALID_CREDENTIALS.append([root_user["username"], root_user["password"]])
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 auth = dash_auth.BasicAuth(
@@ -38,7 +37,7 @@ def fetch_original_alerts():
     start_str = datetime.datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
     end_str = datetime.datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
 
-    response = requests.post("http://localhost:8080/login", json={"username": root_user["username"], "password": root_user["password"]})
+    response = requests.post("http://localhost:8080/login", json={"username": os.environ["ADMIN_USERNAME"], "password": os.environ["ADMIN_PASSWORD"]})
     token = response.json()["token"]
     headers = {"Authorization": "Bearer {0}".format(token)}
 

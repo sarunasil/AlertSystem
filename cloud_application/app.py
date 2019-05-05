@@ -6,7 +6,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver, is_valid_user
+from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver, is_valid_user, get_user_visualisation_key
 
 # logging configuration
 LOG_FILE = "/var/log/alarms.log"
@@ -54,6 +54,15 @@ def login():
 
     access_token = create_access_token(identity=username)
     return jsonify({"token": access_token}), 200
+
+
+@app.route('/visualisation', methods=['GET'])
+@jwt_required
+def visualisation_key():
+
+    user = get_jwt_identity()
+
+    return jsonify({"key": get_user_visualisation_key(user)})
 
 
 @app.route('/receivers', methods=['POST', 'GET', 'DELETE'])

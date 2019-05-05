@@ -1,4 +1,5 @@
 from uuid import uuid4
+from hashlib import sha3_512
 import pymongo
 
 
@@ -11,8 +12,18 @@ users_collection = db["users"]
 
 
 def is_valid_user(username, password):
+    hashed_password = sha3_512(password.encode()).hexdigest()
+    return users_collection.find_one({"username": username, "password": hashed_password}) is not None
 
-    return users_collection.find_one({"username": username, "password": password}) is not None
+
+def get_user_visualisation_key(username):
+
+    user = users_collection.find_one({"username": username})
+
+    if user is None:
+        return None
+
+    return user["key"]
 
 
 def create_receiver(email_address):
