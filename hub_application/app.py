@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, abort
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 import datetime
 import os
 import model
@@ -6,6 +7,10 @@ import requests
 
 
 app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
+jwt = JWTManager(app)
+jwt_user = os.environ["JWT_USER"]
+jwt_password = os.environ["JWT_PASSWORD"]
 
 pipe = "/tmp/communication"
 if not os.path.exists(pipe):
@@ -23,31 +28,55 @@ data = {
 }
 
 
+@app.route('/login', methods=['POST'])
+def login():
+
+    if request.json is None:
+        abort(400, "Expecting JSON body.")
+
+    if request.json.keys() != {"username", "password"}:
+        abort(400, "Expecting JSON body with username and password.")
+
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+
+    if username != jwt_user or password != jwt_password:
+        return jsonify({"msg": "Authentication failure."}), 401
+
+    access_token = create_access_token(identity=username)
+    return jsonify({"token": access_token}), 200
+
+
 @app.route('/devices/sensors', methods=['GET', 'POST', 'DELETE'])
+@jwt_required
 def sensors():
 
     return jsonify(handle_request_for_devices("sensor"))
 
 
 @app.route('/devices/sensors/<alias>', methods=['POST', 'GET', 'DELETE'])
+@jwt_required
 def sensors_instance(alias):
 
     return jsonify(handle_request_for_device_instance("sensor", alias))
 
 
 @app.route('/devices/ringers', methods=['GET', 'POST', 'DELETE'])
+@jwt_required
 def ringers():
 
     return jsonify(handle_request_for_devices("ringer"))
 
 
 @app.route('/devices/ringers/<alias>', methods=['POST', 'GET', 'DELETE'])
+@jwt_required
 def ringers_instance(alias):
 
     return jsonify(handle_request_for_device_instance("ringer", alias))
 
 
 @app.route('/alarms', methods=['POST', 'DELETE'])
+@jwt_required
 def alarms_management():
 
     global pipefile
@@ -57,7 +86,12 @@ def alarms_management():
         print("Received alarm data", request.json)
         print("Sending to cloud")
 
-        requests.post('http://3.8.68.131:8080/alarms', json={"msg": "Alarm has been triggered - {0}".format(request.json)})
+        # hub needs to authenticate first
+        response = requests.post("http://3.8.68.131:8080/login", json={"username": jwt_user, "password": jwt_password})
+        token = response.json()["token"]
+        headers = {"Authorization": "Bearer {0}".format(token)}
+
+        requests.post('http://3.8.68.131:8080/alarms', json={"msg": "Alarm has been triggered - {0}".format(request.json)}, headers=headers)
 
         return jsonify({"msg": "Sent to cloud"})
 
@@ -76,6 +110,7 @@ def alarms_management():
 
 
 @app.route('/devices/scanning', methods=['POST', 'GET'])
+@jwt_required
 def scanning():
 
     global pipefile
@@ -95,6 +130,7 @@ def scanning():
 
 
 @app.route('/devices/scanning/results', methods=['POST'])
+@jwt_required
 def scanning_results_from_handler():
 
     if request.method == 'POST':
