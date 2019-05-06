@@ -1,6 +1,7 @@
 from uuid import uuid4
 from hashlib import sha3_512
 import pymongo
+import os
 
 
 db_url = "mongodb://localhost:27017/cloud"
@@ -11,16 +12,28 @@ receivers_collection = db["receivers"]
 users_collection = db["users"]
 
 
+def register_user(username, password):
+
+    hashed_password = _hash_password(password)
+
+    if users_collection.find_one({"username": username}) is not None:
+        return False
+
+    users_collection.insert_one({"username": username, "password": hashed_password, "key": os.urandom(36).hex()})
+
+    return True
+
+
 def is_valid_user(username, password):
 
-    hashed_password = sha3_512(password.encode()).hexdigest()
+    hashed_password = _hash_password(password)
     return users_collection.find_one({"username": username, "password": hashed_password}) is not None
 
 
 def change_user_password(username, old_password, new_password):
 
-    hashed_old_password = sha3_512(old_password.encode()).hexdigest()
-    hashed_new_password = sha3_512(new_password.encode()).hexdigest()
+    hashed_old_password = _hash_password(old_password)
+    hashed_new_password = _hash_password(new_password)
 
     result = users_collection.update_one({"username": username, "password": hashed_old_password}, {"$set": {"password": hashed_new_password}})
 
@@ -75,3 +88,9 @@ def delete_receivers():
 def delete_receiver(email_object):
 
     receivers_collection.delete_one(email_object)
+
+
+def _hash_password(password):
+
+    return sha3_512(password.encode()).hexdigest()
+

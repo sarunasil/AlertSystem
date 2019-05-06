@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver, is_valid_user, \
-    change_user_password, get_user_visualisation_key
+    register_user, change_user_password, get_user_visualisation_key
 
 # logging configuration
 LOG_FILE = "/var/log/alarms.log"
@@ -36,6 +36,29 @@ message = """
 Received an alarm on {0} UTC
 \n
 {1}"""
+
+
+@app.route('/register', methods=['POST'])
+@jwt_required
+def register():
+
+    if request.json is None:
+        abort(400, "Expecting JSON body.")
+
+    if request.json.keys() != {"username", "password"}:
+        abort(400, "Expecting JSON body with username and password.")
+
+    user = get_jwt_identity()
+    if user != "admin":
+        return jsonify({"msg": "Only the root user can register new accounts."}), 403
+
+    username = request.json.get('username', None)
+    user_password = request.json.get('password', None)
+
+    if not register_user(username, user_password):
+        return jsonify({"msg": "Username is already registered"}), 409
+
+    return jsonify({"msg": "Account successfully created."})
 
 
 @app.route('/login', methods=['POST'])
