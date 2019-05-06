@@ -12,8 +12,19 @@ users_collection = db["users"]
 
 
 def is_valid_user(username, password):
+
     hashed_password = sha3_512(password.encode()).hexdigest()
     return users_collection.find_one({"username": username, "password": hashed_password}) is not None
+
+
+def change_user_password(username, old_password, new_password):
+
+    hashed_old_password = sha3_512(old_password.encode()).hexdigest()
+    hashed_new_password = sha3_512(new_password.encode()).hexdigest()
+
+    result = users_collection.update_one({"username": username, "password": hashed_old_password}, {"$set": {"password": hashed_new_password}})
+
+    return result.matched_count == 1
 
 
 def get_user_visualisation_key(username):

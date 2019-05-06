@@ -6,7 +6,8 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver, is_valid_user, get_user_visualisation_key
+from model import get_receivers_emails, get_receivers, get_receiver, delete_receivers, delete_receiver, receiver_email_exists, create_receiver, is_valid_user, \
+    change_user_password, get_user_visualisation_key
 
 # logging configuration
 LOG_FILE = "/var/log/alarms.log"
@@ -54,6 +55,26 @@ def login():
 
     access_token = create_access_token(identity=username)
     return jsonify({"token": access_token}), 200
+
+
+@app.route('/account', methods=['PUT'])
+@jwt_required
+def change_password():
+
+    if request.json is None:
+        abort(400, "Expecting JSON body.")
+
+    if request.json.keys() != {"old_password", "new_password"}:
+        abort(400, "Expecting JSON body with passwords.")
+
+    user = get_jwt_identity()
+    old_password = request.json["old_password"]
+    new_password = request.json["new_password"]
+
+    if change_user_password(user, old_password, new_password):
+        return jsonify({"msg": "Password has been updated"})
+    else:
+        return jsonify({"msg": "Authentication failure."}), 401
 
 
 @app.route('/visualisation', methods=['GET'])
