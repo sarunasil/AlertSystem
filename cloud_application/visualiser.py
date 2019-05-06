@@ -70,6 +70,12 @@ def fetch_original_alerts():
 
 def update_alerts_graph():
     all_original_alerts, start_str, end_str, delta = fetch_original_alerts()
+
+    # in case some users didn't have any alarms in the log file
+    for user in VALID_CREDENTIALS:
+        if user[0] not in all_original_alerts:
+            all_original_alerts[user[0]] = []
+
     all_timestamps_values = {}
     timestamps = pandas.date_range(start=start_str, end=end_str, periods=delta + 1)
     max_timestamp_value = 0
