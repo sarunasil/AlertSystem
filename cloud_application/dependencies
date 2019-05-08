@@ -1,0 +1,20 @@
+From apt-get:
+python3
+pip3
+mongodb
+nginx
+
+From PyPI (pip):
+flask
+flask_cors
+flask_jwt_extended
+requests
+pymongo
+dash
+dash_auth
+pandas
+
+Expects environment variables:
+JWT_SECRET_KEY
+ADMIN_USERNAME
+ADMIN_PASSWORD
