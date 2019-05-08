@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, abort
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 import datetime
 import os
@@ -7,6 +8,7 @@ import requests
 
 
 app = Flask(__name__)
+CORS(app)
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 jwt = JWTManager(app)
 jwt_user = os.environ["JWT_USER"]
