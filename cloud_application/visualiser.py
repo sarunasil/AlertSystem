@@ -17,10 +17,18 @@ client = pymongo.MongoClient(db_url)
 db = client.get_database()
 
 users_collection = db["users"]
-VALID_CREDENTIALS = [
-    [user["username"], user["key"]] for user in users_collection.find({}, {'_id': False})
-]
+VALID_CREDENTIALS = []
 
+
+def update_valid_credentials():
+
+    new_credentials = [[user["username"], user["key"]] for user in users_collection.find({}, {'_id': False})]
+    for credentials in new_credentials:
+        if credentials not in VALID_CREDENTIALS:
+            VALID_CREDENTIALS.append(credentials)
+
+
+update_valid_credentials()
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 auth = dash_auth.BasicAuth(
     app,
@@ -71,8 +79,9 @@ def fetch_original_alerts():
 def update_alerts_graph():
     all_original_alerts, start_str, end_str, delta = fetch_original_alerts()
 
-    # in case some users didn't have any alarms in the log file
+    update_valid_credentials()
     for user in VALID_CREDENTIALS:
+        # in case some users didn't have any alarms in the log file
         if user[0] not in all_original_alerts:
             all_original_alerts[user[0]] = []
 

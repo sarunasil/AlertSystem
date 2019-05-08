@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>Home Monitoring Application</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+</head>
+
+<body>
+
+<div id="app" class="container" style="margin-top: 10vh;">
+
+    <p>List of receivers:</p>
+
+    <ul class="list-group">
+        <li v-for="receiver in receivers" v-bind:key="receiver.id" class="list-group-item">
+            Email: <i><b>{{ receiver.email }}</b></i> ID: <i><b>{{ receiver.id}}</b></i>
+
+            <button type="button" v-on:click="deleteReceiver(receiver.id)" class="btn btn-danger btn-sm" style="margin-left: 10px;">Delete</button>
+
+        </li>
+    </ul>
+
+    <br>
+
+    <button type="button" class="btn btn-danger btn-sm" v-on:click="deleteReceivers" ref="delete_all_button">Delete all receivers</button>
+
+    <br>
+
+    <form v-on:submit.prevent="createReceiver" style="margin-top:20px; margin-bottom:20px;">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" v-model="email" class="form-control" id="email" placeholder="Enter email address" name="email">
+        </div>
+
+        <button type="submit" class="btn btn-primary" ref="create_button">Add a new receiver</button>
+    </form>
+
+    <form v-on:submit.prevent="fetchToken" class="form-inline" style="margin-top:80px; margin-bottom:20px;">
+        <input type="text" v-model="username" class="form-control" id="username" placeholder="Enter username">
+        <input type="password" v-model="password" class="form-control" id="password" placeholder="Enter password">
+
+        <button type="submit" class="btn btn-primary" ref="authentication_button">Refresh JWT token</button>
+    </form>
+
+    <br>
+
+    <a target="_blank" href="http://3.8.68.131:8050/">Visualisation page</a> key: <b><i>{{ visualisation_key }}</i></b>
+    <button type="button" v-on:click="getVisualisationKey" class="btn btn-primary btn-sm" style="margin-left: 10px;" ref="visualisation_key_button">Refresh</button>
+
+    <br>
+
+    <form v-on:submit.prevent="createAccount" class="form-inline" style="margin-top:80px;">
+        <input type="text" v-model="new_username" class="form-control" id="new_username" placeholder="Enter username">
+        <input type="password" v-model="new_password" class="form-control" id="new_password" placeholder="Enter password">
+
+        <button type="submit" class="btn btn-primary" ref="new_account_button">Create new credentials for JWT token</button>
+    </form>
+
+    <br>
+
+    <form v-on:submit.prevent="createFakeAlert" class="form-inline" style="margin-top:80px; margin-bottom:20px;">
+        <input type="text" v-model="alert_message" class="form-control" id="alert_message" placeholder="Enter alert message">
+        <div class="form-check" style="margin-left: 10px;">
+            <label class="form-check-label">
+                <input class="form-check-input" type="checkbox" v-model="with_email"> With emails to receivers
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary" ref="new_alert_button" style="margin-left:10px;">Create fake alert</button>
+    </form>
+
+    <br>
+
+    <button type="button" class="btn btn-danger" v-on:click="refreshContent" ref="log_content_button" style="margin-top: 20px;">Refresh alerts log content</button>
+    <pre><code>{{ log_content }}</code></pre>
+
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+<script src="frontend.js"></script>
+
+</body>
+
+</html>

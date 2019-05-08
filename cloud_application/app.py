@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, abort
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
 import smtplib
 import getpass
@@ -23,6 +24,7 @@ logger.addHandler(filehandler)
 
 # app config. and init.
 app = Flask(__name__)
+CORS(app)
 
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 jwt = JWTManager(app)
@@ -195,7 +197,7 @@ def api_alert():
         with open(LOG_FILE) as fh:
             content = fh.read()
 
-        return content
+        return '\n'.join(reversed(content.split("\n")))
 
 
 app.run(host='0.0.0.0', port=8080)
