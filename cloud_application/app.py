@@ -25,6 +25,11 @@ logger.addHandler(filehandler)
 # app config. and init.
 app = Flask(__name__)
 CORS(app)
+@app.errorhandler(Exception)
+def handler(e):
+    if getattr(e, "code", None) is not None:
+        return jsonify({"msg": str(e)}), e.code
+
 
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 jwt = JWTManager(app)
@@ -52,13 +57,16 @@ def register():
 
     user = get_jwt_identity()
     if user != "admin":
-        return jsonify({"msg": "Only the root user can register new accounts."}), 403
+        abort(403, "Only the root user can register new accounts.")
 
     username = request.json.get('username', None)
     user_password = request.json.get('password', None)
 
+    if username == "" or user_password == "":
+        abort(400, "Username and password cannot be empty.")
+
     if not register_user(username, user_password):
-        return jsonify({"msg": "Username is already registered"}), 409
+        abort(409, "Username is already registered")
 
     return jsonify({"msg": "Account successfully created."})
 
@@ -76,7 +84,7 @@ def login():
     user_password = request.json.get('password', None)
 
     if username is None or user_password is None or not is_valid_user(username, user_password):
-        return jsonify({"msg": "Authentication failure."}), 401
+        abort(401, "Authentication failure.")
 
     access_token = create_access_token(identity=username)
     return jsonify({"token": access_token}), 200
@@ -99,7 +107,7 @@ def change_password():
     if change_user_password(user, old_password, new_password):
         return jsonify({"msg": "Password has been updated"})
     else:
-        return jsonify({"msg": "Authentication failure."}), 401
+        abort(401, "Authentication failure.")
 
 
 @app.route('/visualisation', methods=['GET'])
@@ -129,6 +137,9 @@ def api_receivers():
 
         if body.keys() != {"email"}:
             abort(400, "Invalid JSON content.")
+
+        if body["email"] == "":
+            abort(400, "Cannot register empty email address.")
 
         if receiver_email_exists(body["email"]):
             abort(409, "Email receiver already exists.")
