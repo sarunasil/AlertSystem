@@ -9,6 +9,12 @@ import requests
 
 app = Flask(__name__)
 CORS(app)
+@app.errorhandler(Exception)
+def handler(e):
+    if getattr(e, "code", None) is not None:
+        return jsonify({"msg": str(e)}), e.code
+
+
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 jwt = JWTManager(app)
 jwt_user = os.environ["JWT_USER"]
@@ -43,7 +49,7 @@ def login():
     password = request.json.get('password', None)
 
     if username != jwt_user or password != jwt_password:
-        return jsonify({"msg": "Authentication failure."}), 401
+        abort(401, "Authentication failure.")
 
     access_token = create_access_token(identity=username)
     return jsonify({"token": access_token}), 200
@@ -215,12 +221,12 @@ def validate_post_body(body):
         abort(400, "Expecting mac address and alias in request body")
 
     mac_addr = body.get("mac")
-    if type(mac_addr) != str:
-        abort(400, "Mac address must be a string value.")
+    if type(mac_addr) != str or mac_addr == "":
+        abort(400, "Mac address must be a non-empty string value.")
 
     alias = body.get("alias")
-    if type(alias) != str:
-        abort(400, "Alias must be a string value.")
+    if type(alias) != str or alias == "":
+        abort(400, "Alias must be a non-empty string value.")
 
     return mac_addr, alias
 
