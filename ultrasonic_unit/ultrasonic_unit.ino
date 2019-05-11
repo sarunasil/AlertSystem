@@ -32,7 +32,7 @@ void react_to_hub_response(String response){
         set_initial_value();
         ble_send_reset_ack();
     }
-    else if (response.indexOf(ACK_COMMAND) >= 0){
+    else if (response.indexOf(ACK_COMMAND) >= 0 && alarm_status == 1){
         alarm_status = 2;
     }
 }
@@ -50,6 +50,10 @@ void loop() {
     }
     else{    
         if (get_state()){
+            hub_response = ble_listen();
+            react_to_hub_response(hub_response);
+            delay(50);
+            
             alarm_status = check_alarm();
     
             while (alarm_status){
