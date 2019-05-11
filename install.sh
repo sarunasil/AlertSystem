@@ -54,4 +54,7 @@ else
 	echo "------------------"
 fi
 
+echo "Installing Nginx"
+sudo apt-get install nginx -y
+
 echo "Done."

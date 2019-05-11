@@ -51,7 +51,7 @@ class Communicator(threading.Thread):
                 if line == "RESET\n":#reset ringers and sensors state (stops alarm)
                     self.reset_func()
 
-                elif line == "RESEET_AND_MEASURE\n":#stops alarm and sensors initial value is measured again
+                elif line == "RESET_AND_MEASURE\n":#stops alarm and sensors initial value is measured again
                     self.reset_func(measure=True)
 
                 elif line == "SCAN\n": #scan ble devices and post result

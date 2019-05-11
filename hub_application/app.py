@@ -95,11 +95,11 @@ def alarms_management():
         print("Sending to cloud")
 
         # hub needs to authenticate first
-        response = requests.post("http://3.8.68.131:8080/login", json={"username": jwt_user, "password": jwt_password})
+        response = requests.post("http://10.14.170.116:8080/login", json={"username": jwt_user, "password": jwt_password})
         token = response.json()["token"]
         headers = {"Authorization": "Bearer {0}".format(token)}
 
-        requests.post('http://3.8.68.131:8080/alarms', json={"msg": "Alarm has been triggered - {0}".format(request.json)}, headers=headers)
+        requests.post('http://10.14.170.116:8080/alarms', json={"msg": "Alarm has been triggered - {0}".format(request.json)}, headers=headers)
 
         return jsonify({"msg": "Sent to cloud"})
 
@@ -147,7 +147,10 @@ def scanning_results_from_handler():
         if body is None:
             abort(400, "Expecting JSON body.")
 
-        data["scanning"]["result"] = body
+        for index, dev in enumerate(body.values()):
+            dev["index"] = index
+
+        data["scanning"]["result"] = sorted(list(body.values()), key=lambda dev: dev["index"])
         data["scanning"]["timestamp"] = int(datetime.datetime.now().timestamp())
 
         return jsonify({"msg": "Scanning results have been saved"})
