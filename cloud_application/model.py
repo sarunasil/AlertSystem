@@ -1,65 +1,96 @@
 from uuid import uuid4
+from hashlib import sha3_512
+import pymongo
+import os
 
 
-_receivers = []  # a list of the receivers' email addresses
+db_url = "mongodb://localhost:27017/cloud"
+client = pymongo.MongoClient(db_url)
+db = client.get_database()
+
+receivers_collection = db["receivers"]
+users_collection = db["users"]
+
+
+def register_user(username, password):
+
+    hashed_password = _hash_password(password)
+
+    if users_collection.find_one({"username": username}) is not None:
+        return False
+
+    users_collection.insert_one({"username": username, "password": hashed_password, "key": os.urandom(36).hex()})
+
+    return True
+
+
+def is_valid_user(username, password):
+
+    hashed_password = _hash_password(password)
+    return users_collection.find_one({"username": username, "password": hashed_password}) is not None
+
+
+def change_user_password(username, old_password, new_password):
+
+    hashed_old_password = _hash_password(old_password)
+    hashed_new_password = _hash_password(new_password)
+
+    result = users_collection.update_one({"username": username, "password": hashed_old_password}, {"$set": {"password": hashed_new_password}})
+
+    return result.matched_count == 1
+
+
+def get_user_visualisation_key(username):
+
+    user = users_collection.find_one({"username": username})
+
+    if user is None:
+        return None
+
+    return user["key"]
 
 
 def create_receiver(email_address):
 
-    global _receivers
-
     email_object = {"id": uuid4(), "email": email_address}
-    _receivers.append(email_object)
+    receivers_collection.insert_one({"id": email_object["id"], "email": email_object["email"]})
 
     return email_object
 
 
 def receiver_email_exists(email_address):
 
-    global _receivers
-
-    return email_address in {email_obj["email"] for email_obj in _receivers}
+    return receivers_collection.find_one({"email": email_address}) is not None
 
 
 def get_receivers():
 
-    global _receivers
-
-    return _receivers
+    return list(receivers_collection.find({}, {'_id': False}))
 
 
 def get_receivers_emails():
 
-    global _receivers
-
-    return [email_object["email"] for email_object in _receivers]
+    return [email_object["email"] for email_object in receivers_collection.find({}, {'_id': False})]
 
 
 def get_receiver(index):
 
-    email_object = None
-
-    for test_email in _receivers:
-        if test_email["id"] == index:
-            email_object = test_email
-            break
-
-    return email_object
+    return receivers_collection.find_one({"id": index}, {'_id': False})
 
 
 def delete_receivers():
 
-    global _receivers
+    receivers_collection.delete_many({})
 
-    _receivers.clear()
-
-    return _receivers
+    return []
 
 
 def delete_receiver(email_object):
 
-    global _receivers
+    receivers_collection.delete_one(email_object)
 
-    _receivers.remove(email_object)
 
-    return email_object
+def _hash_password(password):
+
+    return sha3_512(password.encode()).hexdigest()
+
