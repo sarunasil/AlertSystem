@@ -2,7 +2,7 @@ import pymongo
 
 db_url = "mongodb://localhost:27017/devices"
 client = pymongo.MongoClient(db_url)
-db = client.get_database()
+db = client.get_database("devices")
 
 sensors_collection = db["sensors"]
 

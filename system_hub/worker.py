@@ -42,6 +42,7 @@ class Worker:
                     self.__reset()
             else:
                 pass
+            print(iden, "JOB DONE")
             jobs_queue.task_done()
 
     def __connect(self, job):
@@ -93,11 +94,13 @@ class Worker:
                 if ringer.dev_status != 1: #if not ack ringing
                     resend = True
             if not resend: #stop sending
-                break
+               break
 
+            print("Resending to: ", self.ringer_objs)
             #resend
             for ringer in list(self.ringer_objs.values()):
                 if ringer.dev_status != 1:
+                    print("Sending ring to ringer " + ringer.alias)
                     ringer.send_message("RING\n")
 
             time.sleep(resend_period)
@@ -113,11 +116,12 @@ class Worker:
         #repeat until all devices have ack their reset
         while True:
             activated_devices = []
-            for device in list({**self.sensor_objs, **self.ringer_objs}.values()):
+            for device in list(self.sensor_objs.values()) + list(self.ringer_objs.values()):
                 if device.dev_status == 1:
                     activated_devices.append(device)
 
             if not activated_devices:
+                print("No activated devices found, breaking out of reset job", activated_devices)
                 break
 
             ble.send_command(activated_devices, "RESET\n")
@@ -131,7 +135,7 @@ class Worker:
         '''
 
         resend_period = 2#seconds
-        ble.send_command(self.sensor_objs.values(), "RESET_AND_MEASURE\n")
+        ble.send_command(self.sensor_objs.values(), "RESEET_AND_MEASURE\n")
         ble.send_command(self.ringer_objs.values(), "RESET\n")
         time.sleep(resend_period)
 
