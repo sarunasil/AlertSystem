@@ -15,7 +15,7 @@ sudo apt-get install -y python3-pip
 if hash pip3 2>/dev/null; then
 	echo "Installing Flask"
 	echo "------------------"
-	pip3 install flask
+	pip3 install flask flask_cors flasks_jwt_extended
 
 	echo "Installing PyBluez"
 	echo "------------------"
@@ -23,11 +23,11 @@ if hash pip3 2>/dev/null; then
 
 	echo "Installing pymongo"
 	echo "------------------"
-	pip3 install pymongo
+	pip3 install pymongo==3.4
 elif hash pip-3.2 2>/dev/null; then
 	echo "Installing Flask"
 	echo "------------------"
-	pip-3.2 install flask
+	pip-3.2 install flask flask_cors flasks_jwt_extended
 
 	echo "Installing PyBluez"
 	echo "------------------"
@@ -35,7 +35,7 @@ elif hash pip-3.2 2>/dev/null; then
 
 	echo "Installing pymongo"
 	echo "------------------"
-	pip-3.2 install pymongo
+	pip-3.2 install pymongo==3.4
 else
 	echo "ERROR: Could not install Flask and pybluez - no pip3 or pip-3.2"
 	echo "------------------"
