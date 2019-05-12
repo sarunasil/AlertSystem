@@ -150,7 +150,7 @@ def setup():
 
 
     #create workers to deal with devices loosing connection and reconnecting
-    number_of_threads = min(3, sensor_len + ringer_len + 1) #make sure there are enough threads
+    number_of_threads = min(3, sensors_len + ringers_len + 1) #make sure there are enough threads
     thread_executor =  ThreadPoolExecutor(number_of_threads)
     for i in range(0, number_of_threads):
         thread_executor.submit(Worker, i, jobs_queue, sensor_objs, ringer_objs)
