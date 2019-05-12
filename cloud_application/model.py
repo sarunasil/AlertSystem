@@ -1,5 +1,5 @@
 from uuid import uuid4
-from hashlib import sha3_512
+from hashlib import sha512
 import pymongo
 import os
 
@@ -92,5 +92,5 @@ def delete_receiver(email_object):
 
 def _hash_password(password):
 
-    return sha3_512(password.encode()).hexdigest()
+    return sha512(password.encode()).hexdigest()
 
