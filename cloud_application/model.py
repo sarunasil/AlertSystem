@@ -6,7 +6,7 @@ import os
 
 db_url = "mongodb://localhost:27017/cloud"
 client = pymongo.MongoClient(db_url)
-db = client.get_database()
+db = client.get_database("cloud")
 
 receivers_collection = db["receivers"]
 users_collection = db["users"]
