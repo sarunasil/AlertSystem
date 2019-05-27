@@ -27,6 +27,7 @@ def register_user(username, password):
 def is_valid_user(username, password):
 
     hashed_password = _hash_password(password)
+    print (username, password, hashed_password)
     return users_collection.find_one({"username": username, "password": hashed_password}) is not None
 
 

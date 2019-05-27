@@ -2,8 +2,9 @@ import dash
 import dash_auth
 import dash_core_components as dcc
 import dash_html_components as html
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import pandas
+import numpy
 import datetime
 import requests
 import pymongo
@@ -14,7 +15,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 db_url = "mongodb://localhost:27017/cloud"
 client = pymongo.MongoClient(db_url)
-db = client.get_database()
+db = client.get_database("cloud")
 
 users_collection = db["users"]
 VALID_CREDENTIALS = []
@@ -86,13 +87,18 @@ def update_alerts_graph():
             all_original_alerts[user[0]] = []
 
     all_timestamps_values = {}
-    timestamps = pandas.date_range(start=start_str, end=end_str, periods=delta + 1)
+    #timestamps = pandas.date_range(start=start_str, end=end_str, periods=delta+1)
+    timestamps = pandas.to_datetime(numpy.linspace(pandas.Timestamp(start_str).value, pandas.Timestamp(end_str).value, delta+1))
+    #print(timestamps)
     max_timestamp_value = 0
 
     for identifier in all_original_alerts:
         original_alerts = all_original_alerts[identifier]
         timestamps_values = {str(timestamp): 0 for timestamp in timestamps}
-
+        timestamps_values = OrderedDict()
+        for t in timestamps:
+            timestamps_values[str(t)] = 0
+        #print(timestamps_values)
         for alert_timestamp in original_alerts:
             original_timestamp = datetime.datetime.strptime(alert_timestamp, "%Y-%m-%d %H:%M:%S,%f")
             closest_timestamp = datetime.datetime(year=original_timestamp.year, month=original_timestamp.month, day=original_timestamp.day,
