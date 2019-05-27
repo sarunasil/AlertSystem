@@ -95,11 +95,11 @@ def alarms_management():
         print("Sending to cloud")
 
         # hub needs to authenticate first
-        response = requests.post("http://10.14.170.116:8080/login", json={"username": jwt_user, "password": jwt_password})
+        response = requests.post("http://cloud:8080/login", json={"username": jwt_user, "password": jwt_password})
         token = response.json()["token"]
         headers = {"Authorization": "Bearer {0}".format(token)}
 
-        requests.post('http://10.14.170.116:8080/alarms', json={"msg": "Alarm has been triggered - {0}".format(request.json)}, headers=headers)
+        requests.post('http://cloud:8080/alarms', json={"msg": "Alarm has been triggered - {0}".format(request.json)}, headers=headers)
 
         return jsonify({"msg": "Sent to cloud"})
 
@@ -181,7 +181,7 @@ def handle_request_for_devices(device_type):
     elif request.method == 'DELETE':
 
         getattr(model, "delete_{0}s".format(device_type))()
-
+        print("NOTIFY:" + device_type.upper())
         os.write(pipefile, b"NOTIFY:" + device_type.upper().encode("utf-8") + b"\n")
 
         return []
@@ -212,7 +212,11 @@ def handle_request_for_device_instance(device_type, alias):
 
         to_delete = getattr(model, "get_{0}".format(device_type))(alias)
         getattr(model, "delete_{0}".format(device_type))(alias)
+        print("NOTIFY:" + device_type.upper())
+        os.write(pipefile, b"NOTIFY:" + device_type.upper().encode("utf-8") + b"\n")
         return to_delete
+
+
 
 
 def validate_post_body(body):
