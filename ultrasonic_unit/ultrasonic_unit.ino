@@ -23,10 +23,12 @@ void react_to_hub_response(String response){
     Serial.println("'");
 
     
+//    if (alarm_status == 2 && response.indexOf(RESET_ALARM_COMMAND) >= 0){
     if (response.indexOf(RESET_ALARM_COMMAND) >= 0){
         alarm_status = 0;
         ble_send_reset_ack();
     }
+//    else if (alarm_status == 2 && response.indexOf(RESET_AND_MEASURE_COMMAND) >= 0){
     else if (response.indexOf(RESET_AND_MEASURE_COMMAND) >= 0){
         alarm_status = 0;
         set_initial_value();

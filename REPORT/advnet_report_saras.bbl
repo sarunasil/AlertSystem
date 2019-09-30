@@ -1,0 +1,53 @@
+\begin{thebibliography}{1}
+
+\bibitem{halifax}
+Halifax, ``What time is it? daylight robbery time.,'' {\em Lloyds banking
+  group},
+  pp.~https://www.lloydsbankinggroup.com/globalassets/documents/media/press--releases/halifax/2019/halifax--home--insurance\_clocks--go--forward\_final.pdf
+  [Accessed 17 May 2019], March 2019.
+
+\bibitem{express}
+``Student stuff alert: Digs make rich pickings for thieves.''
+  https://www.express.co.uk/finance/personalfinance/858617/freshers-week-2017-university-student-united-kingdom-burglary-theft-illegal-crime
+  [Accessed 17 May 2019], Sept. 2017.
+
+\bibitem{Tseloni2017}
+A.~Tseloni, R.~Thompson, L.~Grove, N.~Tilley, and G.~Farrell, ``The
+  effectiveness of burglary security devices,'' {\em Security Journal},
+  vol.~30, pp.~646--664, May 2017.
+
+\bibitem{iot_framework}
+K.~{Laubhan}, K.~{Talaat}, S.~{Riehl}, M.~S. {Aman}, A.~{Abdelgawad}, and
+  K.~{Yelamarthi}, ``A low-power iot framework: From sensors to the cloud,'' in
+  {\em 2016 IEEE International Conference on Electro Information Technology
+  (EIT)}, pp.~0648--0652, May 2016.
+
+\bibitem{zigbee}
+C.~{Xu}, X.~{Chen}, D.~{Li}, and X.~{Zhong}, ``Automatic electric meter reading
+  system based on zigbee,'' in {\em 2008 4th International Conference on
+  Wireless Communications, Networking and Mobile Computing}, pp.~1--4, Oct
+  2008.
+
+\bibitem{ble_low}
+M.~{Siekkinen}, M.~{Hiienkari}, J.~K. {Nurminen}, and J.~{Nieminen}, ``How low
+  energy is bluetooth low energy? comparative measurements with
+  zigbee/802.15.4,'' in {\em 2012 IEEE Wireless Communications and Networking
+  Conference Workshops (WCNCW)}, pp.~232--237, April 2012.
+
+\bibitem{ee2010review}
+G.~K. Ee, C.~K. Ng, N.~K. Noordin, and B.~M. Ali, ``A review of 6lowpan routing
+  protocols,'' {\em Proceedings of the Asia-Pacific Advanced Network}, vol.~30,
+  pp.~71--81, 2010.
+
+\bibitem{ble_book}
+A.~R.~D. Kevin~Townsend, Carles~Cufí, {\em Getting Started with Bluetooth Low
+  Energy: Tools and Techniques for Low-Power Networking}.
+\newblock O'Reilly Media; 1 edition, 2014.
+
+\bibitem{ipv6_mapping}
+``Iipv4-mapped ipv6 addresses.''
+  https://www.ibm.com/support/knowledgecenter/en\\
+  /SSLTBW\_2.3.0/com.ibm.zos.v2r3.hale001/ipv6d0031001726.htm [Accessed 17 May
+  2019].
+
+\end{thebibliography}

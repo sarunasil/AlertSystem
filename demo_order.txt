@@ -1,0 +1,32 @@
+power on cloud
+start cloud app
+start visualization
+power on system hub
+configure hub cloud communication
+start application
+start handler
+go to system hub page
+authenticate
+put an obsticle infront sensor
+power on sensor
+power on ringer
+request ble scanning
+sleep(10)
+"refresh scanning content"
+find kirk_sensor
+register kirk_sensor
+kirk_sensor is connected - blinking
+find kirk_ringer
+register kirk_ringer
+kirk_ringer is connected - blinking
+go to cloud /frontend.html
+authenticate (admin, admin)
+add new receiver si1g16@soton.ac.uk
+move box, ALERT, put back the box
+reset the alarm
+move box, ALERT
+reset and measure
+check for emails
+refresh alerts log content - show content
+go to visualization - "very nice"
+

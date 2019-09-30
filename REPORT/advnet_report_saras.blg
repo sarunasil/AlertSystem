@@ -1,0 +1,53 @@
+This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: advnet_report_saras.aux
+The style file: ieeetr.bst
+Database file #1: references.bib
+I was expecting a `,' or a `}'---line 7 of file references.bib
+ :  pages="https://www.lloydsbankinggroup.com/globalassets/documents/media/press-releases/halifax/2019/halifax-home-insurance\_clocks-go-forward\_final.pdf [Accessed 17 May 2019]"
+ :                                                                                                                                                                                 .
+I'm skipping whatever remains of this entry
+Too many commas in name 1 of "Kevin Townsend, Carles Cufí, Akiba, Robert Davidson" for entry ble_book
+while executing---line 969 of file ieeetr.bst
+You've used 9 entries,
+            1876 wiz_defined-function locations,
+            531 strings with 5449 characters,
+and the built_in function-call counts, 5197 in all, are:
+= -- 590
+> -- 89
+< -- 0
++ -- 34
+- -- 25
+* -- 328
+:= -- 551
+add.period$ -- 10
+call.type$ -- 9
+change.case$ -- 8
+chr.to.int$ -- 0
+cite$ -- 9
+duplicate$ -- 257
+empty$ -- 474
+format.name$ -- 25
+if$ -- 1329
+int.to.chr$ -- 0
+int.to.str$ -- 9
+missing$ -- 8
+newline$ -- 31
+num.names$ -- 7
+pop$ -- 45
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 292
+stack$ -- 0
+substring$ -- 772
+swap$ -- 183
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 21
+width$ -- 10
+write$ -- 80
+(There were 2 error messages)
