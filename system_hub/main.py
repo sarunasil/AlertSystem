@@ -134,6 +134,7 @@ def renew_data(typee, devices):
         #typee: 0 for sensor, 1 for ringer
         queue_connect(jobs_queue, device_data['alias'], device_data['mac'], typee)
 
+    return len(devices)
 
 def setup():
     global  sensor_objs, ringer_objs
@@ -144,12 +145,12 @@ def setup():
     time.sleep(5)
 
     #call these to get
-    renew_data(0, communicator.Communicator.get_sensors())
-    renew_data(1, communicator.Communicator.get_ringers())
+    sensors_len = renew_data(0, communicator.Communicator.get_sensors())
+    ringers_len = renew_data(1, communicator.Communicator.get_ringers())
 
 
     #create workers to deal with devices loosing connection and reconnecting
-    number_of_threads = len(sensor_objs) + len(ringer_objs) + 1 #make sure there are enough threads
+    number_of_threads = max(3, sensors_len + ringers_len + 1) #make sure there are enough threads
     thread_executor =  ThreadPoolExecutor(number_of_threads)
     for i in range(0, number_of_threads):
         thread_executor.submit(Worker, i, jobs_queue, sensor_objs, ringer_objs)

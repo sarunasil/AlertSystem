@@ -211,4 +211,4 @@ def api_alert():
         return '\n'.join(reversed(content.split("\n")))
 
 
-app.run(host='0.0.0.0', port=8080)
+app.run(host='::', port=8080)
